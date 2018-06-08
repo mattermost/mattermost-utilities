@@ -6,7 +6,7 @@ package main
 import (
 	"os"
 
-	"github.com/mattermost/mmdev/commands"
+	"github.com/mattermost/mattermost-developer-tool/commands"
 )
 
 func main() {
