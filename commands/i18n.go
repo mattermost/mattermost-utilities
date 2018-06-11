@@ -184,6 +184,96 @@ func checkCmdF(command *cobra.Command, args []string) error {
 	return nil
 }
 
+func extractByFuncName(name string, args []ast.Expr) *string {
+	if name == "T" {
+		if len(args) == 0 {
+			return nil
+		}
+
+		key, ok := args[0].(*ast.BasicLit)
+		if !ok {
+			return nil
+		}
+		return &key.Value
+	} else if name == "NewAppError" {
+		if len(args) < 2 {
+			return nil
+		}
+
+		key, ok := args[1].(*ast.BasicLit)
+		if !ok {
+			return nil
+		}
+		return &key.Value
+	} else if name == "translateFunc" {
+		if len(args) < 1 {
+			return nil
+		}
+
+		key, ok := args[0].(*ast.BasicLit)
+		if !ok {
+			return nil
+		}
+		return &key.Value
+	} else if name == "TranslateAsHtml" {
+		if len(args) < 2 {
+			return nil
+		}
+
+		key, ok := args[1].(*ast.BasicLit)
+		if !ok {
+			return nil
+		}
+		return &key.Value
+	} else if name == "userLocale" {
+		if len(args) < 1 {
+			return nil
+		}
+
+		key, ok := args[0].(*ast.BasicLit)
+		if !ok {
+			return nil
+		}
+		return &key.Value
+	} else if name == "localT" {
+		if len(args) < 1 {
+			return nil
+		}
+
+		key, ok := args[0].(*ast.BasicLit)
+		if !ok {
+			return nil
+		}
+		return &key.Value
+	}
+	return nil
+}
+
+func extractForCostants(name string, value_node ast.Expr) *string {
+	validConstants := map[string]bool{
+		"MISSING_CHANNEL_ERROR":        true,
+		"MISSING_CHANNEL_MEMBER_ERROR": true,
+		"CHANNEL_EXISTS_ERROR":         true,
+		"MISSING_STATUS_ERROR":         true,
+		"TEAM_MEMBER_EXISTS_ERROR":     true,
+		"MISSING_AUTH_ACCOUNT_ERROR":   true,
+		"MISSING_ACCOUNT_ERROR":        true,
+		"EXPIRED_LICENSE_ERROR":        true,
+		"INVALID_LICENSE_ERROR":        true,
+	}
+
+	if _, ok := validConstants[name]; !ok {
+		return nil
+	}
+	value, ok := value_node.(*ast.BasicLit)
+
+	if !ok {
+		return nil
+	}
+	return &value.Value
+
+}
+
 func extractFromPath(path string, info os.FileInfo, err error, i18nStrings *map[string]bool) error {
 	if strings.HasPrefix(path, "./vendor") {
 		return nil
@@ -207,68 +297,52 @@ func extractFromPath(path string, info os.FileInfo, err error, i18nStrings *map[
 	}
 
 	ast.Inspect(f, func(n ast.Node) bool {
-		call, ok := n.(*ast.CallExpr)
-		if !ok {
+		var id *string = nil
+
+		switch expr := n.(type) {
+		case *ast.CallExpr:
+			switch fun := expr.Fun.(type) {
+			case *ast.SelectorExpr:
+				id = extractByFuncName(fun.Sel.Name, expr.Args)
+				if id == nil {
+					return true
+				}
+				break
+			case *ast.Ident:
+				id = extractByFuncName(fun.Name, expr.Args)
+				break
+			default:
+				return true
+			}
+			break
+		case *ast.GenDecl:
+			if expr.Tok == token.CONST {
+				for _, spec := range expr.Specs {
+					value_spec, ok := spec.(*ast.ValueSpec)
+					if !ok {
+						continue
+					}
+					if len(value_spec.Names) == 0 {
+						continue
+					}
+					if len(value_spec.Values) == 0 {
+						continue
+					}
+					id = extractForCostants(value_spec.Names[0].Name, value_spec.Values[0])
+					if id == nil {
+						continue
+					}
+					(*i18nStrings)[strings.Trim(*id, "\"")] = true
+				}
+			}
 			return true
-		}
-
-		var id string = ""
-
-		switch fun := call.Fun.(type) {
-		case *ast.SelectorExpr:
-			if fun.Sel.Name == "T" {
-				if len(call.Args) == 0 {
-					return true
-				}
-
-				key, ok := call.Args[0].(*ast.BasicLit)
-				if !ok {
-					return true
-				}
-				id = key.Value
-			} else if fun.Sel.Name == "NewAppError" {
-				if len(call.Args) < 2 {
-					return true
-				}
-
-				key, ok := call.Args[1].(*ast.BasicLit)
-				if !ok {
-					return true
-				}
-				id = key.Value
-			} else {
-				return true
-			}
-			break
-		case *ast.Ident:
-			if fun.Name == "T" {
-				if len(call.Args) == 0 {
-					return true
-				}
-				key, ok := call.Args[0].(*ast.BasicLit)
-				if !ok {
-					return true
-				}
-				id = key.Value
-			} else if fun.Name == "NewAppError" {
-				if len(call.Args) < 2 {
-					return true
-				}
-				key, ok := call.Args[1].(*ast.BasicLit)
-				if !ok {
-					return true
-				}
-				id = key.Value
-			} else {
-				return true
-			}
-			break
 		default:
 			return true
 		}
 
-		id = strings.Trim(id, "\"")
-		(*i18nStrings)[id] = true
+		if id != nil {
+			(*i18nStrings)[strings.Trim(*id, "\"")] = true
+		}
 
 		return true
 	})
