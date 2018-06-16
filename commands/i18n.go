@@ -249,6 +249,74 @@ func extractByFuncName(name string, args []ast.Expr) *string {
 	return nil
 }
 
+func extractPermissionName(values []ast.Expr) *string {
+	key, ok := values[1].(*ast.BasicLit)
+	if !ok {
+		return nil
+	}
+	return &key.Value
+}
+
+func extractPermissionDescription(values []ast.Expr) *string {
+	key, ok := values[2].(*ast.BasicLit)
+	if !ok {
+		return nil
+	}
+	return &key.Value
+}
+
+func extractRoleName(values []ast.Expr) *string {
+	var name *string = nil
+
+	for _, v := range values {
+		node, ok := v.(*ast.KeyValueExpr)
+		if !ok {
+			continue
+		}
+
+		key, ok := node.Key.(*ast.Ident)
+		if !ok {
+			continue
+		}
+		value, ok := node.Value.(*ast.BasicLit)
+		if !ok {
+			continue
+		}
+		if key.Name == "DisplayName" {
+			name = &value.Value
+			continue
+		}
+	}
+	return name
+}
+
+func extractRoleDescription(values []ast.Expr) *string {
+	var description *string = nil
+
+	for _, v := range values {
+		node, ok := v.(*ast.KeyValueExpr)
+		if !ok {
+			continue
+		}
+
+		key, ok := node.Key.(*ast.Ident)
+		if !ok {
+			continue
+		}
+
+		value, ok := node.Value.(*ast.BasicLit)
+		if !ok {
+			continue
+		}
+
+		if key.Name == "Description" {
+			description = &value.Value
+			continue
+		}
+	}
+	return description
+}
+
 func extractForCostants(name string, value_node ast.Expr) *string {
 	validConstants := map[string]bool{
 		"MISSING_CHANNEL_ERROR":        true,
@@ -315,6 +383,32 @@ func extractFromPath(path string, info os.FileInfo, err error, i18nStrings *map[
 				return true
 			}
 			break
+		case *ast.CompositeLit:
+			structType, ok := expr.Type.(*ast.Ident)
+			if !ok {
+				return true
+			}
+
+			if structType.Name == "Permission" {
+				nameId := extractPermissionName(expr.Elts)
+				descriptionId := extractPermissionDescription(expr.Elts)
+				if nameId != nil {
+					(*i18nStrings)[strings.Trim(*nameId, "\"")] = true
+				}
+				if descriptionId != nil {
+					(*i18nStrings)[strings.Trim(*descriptionId, "\"")] = true
+				}
+			} else if structType.Name == "Role" {
+				nameId := extractRoleName(expr.Elts)
+				descriptionId := extractRoleDescription(expr.Elts)
+				if nameId != nil {
+					(*i18nStrings)[strings.Trim(*nameId, "\"")] = true
+				}
+				if descriptionId != nil {
+					(*i18nStrings)[strings.Trim(*descriptionId, "\"")] = true
+				}
+			}
+			return true
 		case *ast.GenDecl:
 			if expr.Tok == token.CONST {
 				for _, spec := range expr.Specs {
