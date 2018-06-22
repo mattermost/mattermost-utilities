@@ -128,13 +128,20 @@ func extractCmdF(command *cobra.Command, args []string) error {
 		result = append(result, t)
 	}
 	sort.Slice(result, func(i, j int) bool { return result[i].Id < result[j].Id })
+	for _, t := range result {
+		fmt.Println(t.Id)
+	}
 
 	f, err := os.Create(path.Join(mattermostDir, "i18n", "en.json"))
+	defer f.Close()
 
 	encoder := json.NewEncoder(f)
 	encoder.SetIndent("", "  ")
 	encoder.SetEscapeHTML(false)
-	encoder.Encode(result)
+	err = encoder.Encode(result)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -192,6 +199,7 @@ func extractByFuncName(name string, args []ast.Expr) *string {
 
 		key, ok := args[0].(*ast.BasicLit)
 		if !ok {
+			fmt.Println("NOT BasicLit: ", args[0])
 			return nil
 		}
 		return &key.Value
