@@ -1,5 +1,8 @@
-# mmdev: Mattermost developers tools
+# mattermost-utils: Set of utils to help in mattermost development
 
 Mattermost is an open source, self-hosted Slack-alternative https://mattermost.org.
 
-MMDev is a CLI to help with some task related to the mattermost development.
+Currently this repo contains utilities:
+
+* **mmgotool**: is a CLI to help with some task related to the mattermost-server development.
+* **mmjstool**: is a CLI to help with some task related to the mattermost-webapp, mattermost-redux and mattermost-mobile development.
