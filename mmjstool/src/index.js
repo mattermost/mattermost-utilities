@@ -58,7 +58,7 @@ const ignored = yargs.
                 default: '../mattermost-webapp',
             }).
             option('mobile-dir', {
-                describe: 'webapp source code directory',
+                describe: 'mobile source code directory',
                 default: '../mattermost-mobile',
             });
     }, () => { /* empty function */ }

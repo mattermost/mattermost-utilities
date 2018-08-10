@@ -16,39 +16,43 @@ injectAcornStage3(acorn);
 injectAcornJsx(acorn);
 injectAcornStaticClassPropertyInitializer(acorn);
 
-astwalk.base.ClassProperty = (node, st, c) => {
-    c(node.key, st);
-    c(node.value, st);
-};
-astwalk.base.FieldDefinition = (node, st, c) => {
-    c(node.key, st);
-    c(node.value, st);
-};
-astwalk.base.Import = () => { /* empty function */ };
-astwalk.base.JSXElement = (node, st, c) => {
-    c(node.openingElement, st);
-    node.children.forEach((n) => {
-        c(n, st);
-    });
-};
+function patchAstWalk() {
+    astwalk.base.ClassProperty = (node, st, c) => {
+        c(node.key, st);
+        c(node.value, st);
+    };
+    astwalk.base.FieldDefinition = (node, st, c) => {
+        c(node.key, st);
+        c(node.value, st);
+    };
+    astwalk.base.Import = () => { /* empty function */ };
+    astwalk.base.JSXElement = (node, st, c) => {
+        c(node.openingElement, st);
+        node.children.forEach((n) => {
+            c(n, st);
+        });
+    };
 
-astwalk.base.JSXOpeningElement = (node, st, c) => {
-    node.attributes.forEach((n) => {
-        c(n, st);
-    });
-};
+    astwalk.base.JSXOpeningElement = (node, st, c) => {
+        node.attributes.forEach((n) => {
+            c(n, st);
+        });
+    };
 
-astwalk.base.JSXAttribute = (node, st, c) => {
-    c(node.name, st);
-    c(node.value, st);
-};
-astwalk.base.JSXSpreadAttribute = (node, st, c) => {
-    c(node.argument, st);
-};
-astwalk.base.JSXText = () => { /* empty function */ };
-astwalk.base.JSXIdentifier = () => { /* empty function */ };
-astwalk.base.JSXExpressionContainer = base.JSXExpressionContainer;
-astwalk.base.JSXEmptyExpression = () => { /* empty function */ };
+    astwalk.base.JSXAttribute = (node, st, c) => {
+        c(node.name, st);
+        c(node.value, st);
+    };
+    astwalk.base.JSXSpreadAttribute = (node, st, c) => {
+        c(node.argument, st);
+    };
+    astwalk.base.JSXText = () => { /* empty function */ };
+    astwalk.base.JSXIdentifier = () => { /* empty function */ };
+    astwalk.base.JSXExpressionContainer = base.JSXExpressionContainer;
+    astwalk.base.JSXEmptyExpression = () => { /* empty function */ };
+}
+
+patchAstWalk()
 
 export function extractFromDirectory(dirPath, filters = []) {
     return new Promise((resolve) => {
@@ -60,14 +64,20 @@ export function extractFromDirectory(dirPath, filters = []) {
             find().
             then((files) => {
                 for (const file of files) {
-                    Object.assign(translations, extractFromFile(file));
+                    try {
+                        Object.assign(translations, extractFromFile(file));
+                    } catch (e) {
+                        console.log("Unable to parse file:", file);
+                        console.log("Error in: line", e.loc.line, "column", e.loc.column);
+                        return;
+                    }
                 }
                 resolve(translations);
             });
     });
 }
 
-export function extractFromFile(path) {
+function extractFromFile(path) {
     const translations = {};
 
     var code = fs.readFileSync(path, 'utf-8');
