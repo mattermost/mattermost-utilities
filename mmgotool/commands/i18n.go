@@ -199,7 +199,6 @@ func extractByFuncName(name string, args []ast.Expr) *string {
 
 		key, ok := args[0].(*ast.BasicLit)
 		if !ok {
-			fmt.Println("NOT BasicLit: ", args[0])
 			return nil
 		}
 		return &key.Value

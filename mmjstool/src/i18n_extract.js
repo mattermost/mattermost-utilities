@@ -130,7 +130,7 @@ function extractFromFile(path) {
         }
 
         if (type === 'JSXOpeningElement') {
-            if (node.name.name === 'FormattedText' || node.name.name === 'FormattedMessage' || node.name.name === 'FormattedHTMLMessage' || node.name.name === 'FormattedMarkdownMessage') {
+            if (node.name.name === 'FormattedText' || node.name.name === 'FormattedMessage' || node.name.name === 'FormattedHTMLMessage' || node.name.name === 'FormattedMarkdownMessage' || node.name.name === 'FormattedMarkdownText') {
                 let id = '';
                 let defaultMessage = '';
                 for (var attribute of node.attributes) {
