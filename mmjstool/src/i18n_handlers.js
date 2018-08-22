@@ -37,8 +37,8 @@ export function i18nCheck(argv) {
     const currentWebappKeys = new Set(Object.keys(currentTranslations.webapp));
     const currentMobileKeys = new Set(Object.keys(currentTranslations.mobile));
 
-    const promise1 = i18nExtractLib.extractFromDirectory(argv['webapp-dir'], ['dist', 'node_modules', 'non_npm_dependencies', 'tests']);
-    const promise2 = i18nExtractLib.extractFromDirectory(argv['mobile-dir'] + '/app', []);
+    const promise1 = i18nExtractLib.extractFromDirectory([argv['webapp-dir']], ['dist', 'node_modules', 'non_npm_dependencies', 'tests']);
+    const promise2 = i18nExtractLib.extractFromDirectory([argv['mobile-dir'] + '/app', argv['mobile-dir'] + '/share_extension'], []);
     Promise.all([promise1, promise2]).then(([translationsWebapp, translationsMobile]) => {
         const webappKeys = new Set(Object.keys(translationsWebapp));
         const mobileKeys = new Set(Object.keys(translationsMobile));
@@ -70,7 +70,7 @@ export function i18nExtractWebapp(argv) {
     const currentTranslations = getCurrentTranslations(webappDir, mobileDir);
     const currentWebappKeys = new Set(Object.keys(currentTranslations.webapp));
 
-    i18nExtractLib.extractFromDirectory(argv['webapp-dir'], ['dist', 'node_modules', 'non_npm_dependencies', 'tests']).then((translationsWebapp) => {
+    i18nExtractLib.extractFromDirectory([argv['webapp-dir']], ['dist', 'node_modules', 'non_npm_dependencies', 'tests']).then((translationsWebapp) => {
         const webappKeys = new Set(Object.keys(translationsWebapp));
 
         for (const key of difference(currentWebappKeys, webappKeys)) {
@@ -93,7 +93,7 @@ export function i18nExtractMobile(argv) {
     const currentTranslations = getCurrentTranslations(webappDir, mobileDir);
     const currentMobileKeys = new Set(Object.keys(currentTranslations.mobile));
 
-    i18nExtractLib.extractFromDirectory(argv['mobile-dir'] + '/app', []).then((translationsMobile) => {
+    i18nExtractLib.extractFromDirectory([argv['mobile-dir'] + '/app', argv['mobile-dir'] + '/share_extension'], []).then((translationsMobile) => {
         const mobileKeys = new Set(Object.keys(translationsMobile));
 
         for (const key of difference(currentMobileKeys, mobileKeys)) {
@@ -140,8 +140,8 @@ export function i18nSplit(argv) {
     const mobileDir = argv['mobile-dir'];
     const inputFiles = argv.inputs.split(',');
 
-    const promise1 = i18nExtractLib.extractFromDirectory(argv['webapp-dir'], ['dist', 'node_modules', 'non_npm_dependencies', 'tests']);
-    const promise2 = i18nExtractLib.extractFromDirectory(argv['mobile-dir'] + '/app', []);
+    const promise1 = i18nExtractLib.extractFromDirectory([argv['webapp-dir']], ['dist', 'node_modules', 'non_npm_dependencies', 'tests']);
+    const promise2 = i18nExtractLib.extractFromDirectory([argv['mobile-dir'] + '/app', argv['mobile-dir'] + '/share_extension'], []);
     Promise.all([promise1, promise2]).then(([translationsWebapp, translationsMobile]) => {
         for (const inputFile of inputFiles) {
             const filename = path.basename(inputFile.trim());

@@ -54,26 +54,34 @@ function patchAstWalk() {
 
 patchAstWalk()
 
-export function extractFromDirectory(dirPath, filters = []) {
+export function extractFromDirectory(dirPaths, filters = []) {
     return new Promise((resolve) => {
-        const translations = {};
-        FileHound.create().
-            paths(dirPath).
-            discard(filters).
-            ext('js', 'jsx').
-            find().
-            then((files) => {
-                for (const file of files) {
-                    try {
-                        Object.assign(translations, extractFromFile(file));
-                    } catch (e) {
-                        console.log("Unable to parse file:", file);
-                        console.log("Error in: line", e.loc.line, "column", e.loc.column);
-                        return;
-                    }
-                }
-                resolve(translations);
+        const promises = dirPaths.map((dirPath) => {
+            return new Promise((innerResolve) => {
+                const translations = {};
+                FileHound.create().
+                    paths(dirPath).
+                    discard(filters).
+                    ext('js', 'jsx').
+                    find().
+                    then((files) => {
+                        for (const file of files) {
+                            try {
+                                Object.assign(translations, extractFromFile(file));
+                            } catch (e) {
+                                console.log("Unable to parse file:", file);
+                                console.log("Error in: line", e.loc.line, "column", e.loc.column);
+                                return;
+                            }
+                        }
+                        innerResolve(translations);
+                    });
             });
+        });
+
+        Promise.all(promises).then((translations) => {
+            resolve(Object.assign({}, ...translations));
+        });
     });
 }
 
