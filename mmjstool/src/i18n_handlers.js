@@ -100,7 +100,7 @@ export function i18nExtractMobile(argv) {
             delete currentTranslations.mobile[key];
         }
         for (const key of difference(mobileKeys, currentMobileKeys)) {
-            currentTranslations.webapp[key] = translationsMobile[key];
+            currentTranslations.mobile[key] = translationsMobile[key];
         }
 
         const options = {ignoreCase: true, reverse: false, depth: 1};
