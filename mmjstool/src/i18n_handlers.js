@@ -110,23 +110,18 @@ export function i18nExtractMobile(argv) {
 }
 
 export function i18nCombine(argv) {
-    const webappDir = argv['webapp-dir'];
-    const mobileDir = argv['mobile-dir'];
     const outputFile = argv.output;
-
-    const currentTranslations = getCurrentTranslations(webappDir, mobileDir);
 
     const translations = {};
 
-    for (const key in currentTranslations.mobile) {
-        if ({}.hasOwnProperty.call(currentTranslations.mobile, key)) {
-            translations[key] = currentTranslations.mobile[key];
-        }
-    }
+    for (const file of argv._.slice(2)) {
+        const itemTranslationsJson = fs.readFileSync(file);
+        const itemTranslations = JSON.parse(itemTranslationsJson);
 
-    for (const key in currentTranslations.webapp) {
-        if ({}.hasOwnProperty.call(currentTranslations.webapp, key)) {
-            translations[key] = currentTranslations.webapp[key];
+        for (const key in itemTranslations) {
+            if ({}.hasOwnProperty.call(itemTranslations, key)) {
+                translations[key] = itemTranslations[key];
+            }
         }
     }
 

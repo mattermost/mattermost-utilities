@@ -29,7 +29,7 @@ const ignored = yargs.
             command('combine',
                 'Read the translations string from mattermost-webapp and mattermost-mobile and combine them in a single file',
                 (combineArgs) => {
-                    combineArgs.
+                    combineArgs.demandCommand(2).
                         option('output', {
                             describe: 'File to store the combined translations',
                             default: 'en.json',

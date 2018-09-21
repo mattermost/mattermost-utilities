@@ -70,8 +70,11 @@ func getCurrentTranslations(mattermostDir string) ([]Translation, error) {
 
 func extractStrings(enterpriseDir, mattermostDir string) map[string]bool {
 	i18nStrings := map[string]bool{}
-	walkFunc := func(path string, info os.FileInfo, err error) error {
-		return extractFromPath(path, info, err, &i18nStrings)
+	walkFunc := func(p string, info os.FileInfo, err error) error {
+		if strings.HasPrefix(p, path.Join(mattermostDir, "vendor")) {
+			return nil
+		}
+		return extractFromPath(p, info, err, &i18nStrings)
 	}
 	filepath.Walk(mattermostDir, walkFunc)
 	filepath.Walk(enterpriseDir, walkFunc)
@@ -282,7 +285,7 @@ func extractForCostants(name string, value_node ast.Expr) *string {
 }
 
 func extractFromPath(path string, info os.FileInfo, err error, i18nStrings *map[string]bool) error {
-	if strings.HasPrefix(path, "./vendor") {
+	if strings.HasSuffix(path, "model/client4.go") {
 		return nil
 	}
 	if strings.HasSuffix(path, "_test.go") {
