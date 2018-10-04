@@ -92,6 +92,7 @@ func extractCmdF(command *cobra.Command, args []string) error {
 	}
 
 	i18nStrings := extractStrings(enterpriseDir, mattermostDir)
+	addDynamicallyGeneratedStrings(&i18nStrings)
 
 	i18nStringsList := []string{}
 	for id := range i18nStrings {
@@ -160,6 +161,7 @@ func checkCmdF(command *cobra.Command, args []string) error {
 	}
 
 	i18nStrings := extractStrings(enterpriseDir, mattermostDir)
+	addDynamicallyGeneratedStrings(&i18nStrings)
 
 	i18nStringsList := []string{}
 	for id := range i18nStrings {
@@ -192,6 +194,24 @@ func checkCmdF(command *cobra.Command, args []string) error {
 		}
 	}
 	return nil
+}
+
+func addDynamicallyGeneratedStrings(i18nStrings *map[string]bool) {
+	(*i18nStrings)["model.user.is_valid.pwd_lowercase.app_error"] = true
+	(*i18nStrings)["model.user.is_valid.pwd_lowercase_number.app_error"] = true
+	(*i18nStrings)["model.user.is_valid.pwd_lowercase_number_symbol.app_error"] = true
+	(*i18nStrings)["model.user.is_valid.pwd_lowercase_symbol.app_error"] = true
+	(*i18nStrings)["model.user.is_valid.pwd_lowercase_uppercase.app_error"] = true
+	(*i18nStrings)["model.user.is_valid.pwd_lowercase_uppercase_number.app_error"] = true
+	(*i18nStrings)["model.user.is_valid.pwd_lowercase_uppercase_number_symbol.app_error"] = true
+	(*i18nStrings)["model.user.is_valid.pwd_lowercase_uppercase_symbol.app_error"] = true
+	(*i18nStrings)["model.user.is_valid.pwd_number.app_error"] = true
+	(*i18nStrings)["model.user.is_valid.pwd_number_symbol.app_error"] = true
+	(*i18nStrings)["model.user.is_valid.pwd_symbol.app_error"] = true
+	(*i18nStrings)["model.user.is_valid.pwd_uppercase.app_error"] = true
+	(*i18nStrings)["model.user.is_valid.pwd_uppercase_number.app_error"] = true
+	(*i18nStrings)["model.user.is_valid.pwd_uppercase_number_symbol.app_error"] = true
+	(*i18nStrings)["model.user.is_valid.pwd_uppercase_symbol.app_error"] = true
 }
 
 func extractByFuncName(name string, args []ast.Expr) *string {
