@@ -130,6 +130,18 @@ export function i18nCombine(argv) {
     fs.writeFileSync(outputFile, JSON.stringify(sortedTranslations, null, 2));
 }
 
+export function i18nSort(argv) {
+    const outputFile = argv.output;
+
+    const file = argv._[2];
+    const itemTranslationsJson = fs.readFileSync(file);
+    const itemTranslations = JSON.parse(itemTranslationsJson);
+
+    const options = {ignoreCase: true, reverse: false, depth: 1};
+    const sortedTranslations = sortJson(itemTranslations, options);
+    fs.writeFileSync(outputFile, JSON.stringify(sortedTranslations, null, 2));
+}
+
 export function i18nSplit(argv) {
     const webappDir = argv['webapp-dir'];
     const mobileDir = argv['mobile-dir'];

@@ -48,6 +48,17 @@ const ignored = yargs.
                 },
                 i18nHandlers.i18nSplit,
             ).
+            command('sort',
+                'read a file and sort the content',
+                (sortArgs) => {
+                    sortArgs.demandCommand(1).
+                        option('output', {
+                            describe: 'File to store sorted translations',
+                            default: 'en.json',
+                        });
+                },
+                i18nHandlers.i18nSort,
+            ).
             command('check',
                 'Read the source code, find all the translations string, and show you the differences with the current i18n/en.json files',
                 () => { /* empty function */ },
