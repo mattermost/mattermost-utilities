@@ -12,6 +12,20 @@ const injectAcornStage3 = require('acorn-stage3/inject');
 const injectAcornJsx = require('acorn-jsx/inject');
 const injectAcornStaticClassPropertyInitializer = require('acorn-static-class-property-initializer/inject');
 
+const QUESTION_MARK_ASCII_CODE = 63;
+
+acorn.plugins.ignoreOptionalChaining = (parser) => {
+  parser.extend('readWord1', function(nextMethod) {
+    return function() {
+      const word = nextMethod.call(this);
+      if (this.fullCharCodeAtPos() === QUESTION_MARK_ASCII_CODE) {
+          ++this.pos;
+      }
+      return word;
+    };
+  });
+};
+
 injectAcornStage3(acorn);
 injectAcornJsx(acorn);
 injectAcornStaticClassPropertyInitializer(acorn);
@@ -94,6 +108,7 @@ function extractFromFile(path) {
             stage3: true,
             jsx: true,
             staticClassPropertyInitializer: true,
+            ignoreOptionalChaining: true,
         },
         ecmaVersion: 10,
         sourceType: 'module',
