@@ -6,16 +6,18 @@
   "scripts": {
     "check": "eslint --ignore-pattern node_modules --ignore-pattern non_npm_dependencies --ignore-pattern build --ext .js . --quiet",
     "fix": "eslint --ignore-pattern node_modules --ignore-pattern non_npm_dependencies --ignore-pattern build --ext .js . --quiet --fix",
-    "babel": "babel --presets env src/index.js src/i18n_extract.js src/i18n_handlers.js -d build",
+    "babel": "babel --presets env src/index.js src/i18n_extract.js src/i18n_handlers.js src/acorn-optional-chaining.js -d build",
     "pack": "pkg build/src/index.js -o mmjstool"
   },
   "author": "Jesús Espino <jesus.espino@mattermost.com>",
   "dependencies": {
-    "acorn": "^5.7.1",
+    "acorn": "^6.0.4",
+    "acorn-jsx": "^5.0.1",
     "acorn-jsx-walk": "^1.0.1",
-    "acorn-stage3": "^0.6.0",
-    "acorn-static-class-property-initializer": "^1.0.0",
+    "acorn-stage3": "^1.0.0",
+    "acorn-walk": "^6.1.1",
     "filehound": "^1.16.4",
+    "flow-remove-types": "^1.2.3",
     "sort-json": "^2.0.0",
     "yargs": "^11.0.0"
   },

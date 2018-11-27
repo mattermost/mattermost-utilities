@@ -4,31 +4,17 @@
 const fs = require('fs');
 
 const FileHound = require('filehound');
+const flowRemoveTypes = require('flow-remove-types');
 
-const acorn = require('acorn');
-const astwalk = require('acorn/dist/walk');
+const {Parser} = require('acorn');
+const astwalk = require('acorn-walk');
 const {base} = require('acorn-jsx-walk');
-const injectAcornStage3 = require('acorn-stage3/inject');
-const injectAcornJsx = require('acorn-jsx/inject');
-const injectAcornStaticClassPropertyInitializer = require('acorn-static-class-property-initializer/inject');
+const acornJsx = require('acorn-jsx');
+const acornStage3 = require('acorn-stage3');
 
-const QUESTION_MARK_ASCII_CODE = 63;
+const {acornOptionalChaining} = require('./acorn-optional-chaining');
 
-acorn.plugins.ignoreOptionalChaining = (parser) => {
-  parser.extend('readWord1', function(nextMethod) {
-    return function() {
-      const word = nextMethod.call(this);
-      if (this.fullCharCodeAtPos() === QUESTION_MARK_ASCII_CODE) {
-          ++this.pos;
-      }
-      return word;
-    };
-  });
-};
-
-injectAcornStage3(acorn);
-injectAcornJsx(acorn);
-injectAcornStaticClassPropertyInitializer(acorn);
+const acorn = Parser.extend(acornStage3, acornJsx(), acornOptionalChaining);
 
 function patchAstWalk() {
     astwalk.base.ClassProperty = (node, st, c) => {
@@ -103,7 +89,7 @@ function extractFromFile(path) {
     const translations = {};
 
     var code = fs.readFileSync(path, 'utf-8');
-    const ast = acorn.parse(code, {
+    const ast = acorn.parse(flowRemoveTypes(code), {
         plugins: {
             stage3: true,
             jsx: true,
