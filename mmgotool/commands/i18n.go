@@ -194,6 +194,7 @@ func checkCmdF(command *cobra.Command, args []string) error {
 		}
 	}
 	if changed {
+		command.SilenceUsage = true
 		return errors.New("Translations file out of date.")
 	}
 	return nil
