@@ -132,9 +132,6 @@ func extractCmdF(command *cobra.Command, args []string) error {
 		result = append(result, t)
 	}
 	sort.Slice(result, func(i, j int) bool { return result[i].Id < result[j].Id })
-	for _, t := range result {
-		fmt.Println(t.Id)
-	}
 
 	f, err := os.Create(path.Join(mattermostDir, "i18n", "en.json"))
 	defer f.Close()
@@ -182,16 +179,22 @@ func checkCmdF(command *cobra.Command, args []string) error {
 	}
 	sort.Strings(translationsList)
 
+	changed := false
 	for _, translationKey := range i18nStringsList {
 		if _, hasKey := idx[translationKey]; !hasKey {
 			fmt.Println("Added:", translationKey)
+			changed = true
 		}
 	}
 
 	for _, translationKey := range translationsList {
 		if _, hasKey := i18nStrings[translationKey]; !hasKey {
 			fmt.Println("Removed:", translationKey)
+			changed = true
 		}
+	}
+	if changed {
+		return errors.New("Translations file out of date.")
 	}
 	return nil
 }
