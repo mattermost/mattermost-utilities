@@ -1,2 +1,0 @@
-#!/bin/bash
-node node_modules/mmjstool/mmjstool/build/src/index.js $@
