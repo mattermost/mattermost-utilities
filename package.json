@@ -15,15 +15,15 @@
   },
   "author": "Jesús Espino <jesus.espino@mattermost.com>",
   "dependencies": {
-    "acorn": "^6.0.4",
-    "acorn-jsx": "^5.0.1",
-    "acorn-jsx-walk": "^1.0.1",
-    "acorn-stage3": "^1.0.0",
-    "acorn-walk": "^6.1.1",
-    "filehound": "^1.16.4",
-    "flow-remove-types": "^1.2.3",
-    "sort-json": "^2.0.0",
-    "yargs": "^11.0.0"
+    "acorn": "6.0.4",
+    "acorn-jsx": "5.0.1",
+    "acorn-jsx-walk": "1.0.1",
+    "acorn-stage3": "1.0.0",
+    "acorn-walk": "6.1.1",
+    "filehound": "1.16.4",
+    "flow-remove-types": "1.2.3",
+    "sort-json": "2.0.0",
+    "yargs": "11.0.0"
   },
   "pkg": {
     "scripts": "mmjstool/**/*.js"
