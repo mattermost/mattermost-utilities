@@ -4,7 +4,7 @@
   "description": "Mattermost js source code utilities",
   "main": "mmjstool/src/index.js",
   "bin": {
-    "mmjstool": "./mmjstool/src/index.js"
+    "mmjstool": "./mmjstool/cli"
   },
   "scripts": {
     "check": "eslint --ignore-pattern node_modules --ignore-pattern non_npm_dependencies --ignore-pattern build --ext .js . --quiet",
