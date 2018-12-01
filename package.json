@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Mattermost js source code utilities",
   "main": "mmjstool/build/src/index.js",
+  "bin": {
+    "mmjstool": "./mmjstool/build/src/index.js"
+  },
   "scripts": {
     "check": "eslint --ignore-pattern node_modules --ignore-pattern non_npm_dependencies --ignore-pattern build --ext .js . --quiet",
     "fix": "eslint --ignore-pattern node_modules --ignore-pattern non_npm_dependencies --ignore-pattern build --ext .js . --quiet --fix",
