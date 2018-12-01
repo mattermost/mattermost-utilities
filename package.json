@@ -11,7 +11,7 @@
     "fix": "eslint --ignore-pattern node_modules --ignore-pattern non_npm_dependencies --ignore-pattern build --ext .js . --quiet --fix",
     "babel": "babel --presets env mmjstool/src/index.js mmjstool/src/i18n_extract.js mmjstool/src/i18n_handlers.js mmjstool/src/acorn-optional-chaining.js -d mmjstool/build",
     "pack": "pkg mmjstool/build/src/index.js -o mmjstool",
-    "prepare": "npm run babel"
+    "preinstall": "npm run babel"
   },
   "author": "Jesús Espino <jesus.espino@mattermost.com>",
   "dependencies": {
