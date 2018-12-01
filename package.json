@@ -2,9 +2,9 @@
   "name": "mmjstool",
   "version": "1.0.0",
   "description": "Mattermost js source code utilities",
-  "main": "mmjstool/build/src/index.js",
+  "main": "mmjstool/src/index.js",
   "bin": {
-    "mmjstool": "./mmjstool/build/src/index.js"
+    "mmjstool": "./mmjstool/src/index.js"
   },
   "scripts": {
     "check": "eslint --ignore-pattern node_modules --ignore-pattern non_npm_dependencies --ignore-pattern build --ext .js . --quiet",
@@ -26,7 +26,7 @@
     "yargs": "^11.0.0"
   },
   "pkg": {
-    "scripts": "mmjstool/build/**/*.js"
+    "scripts": "mmjstool/**/*.js"
   },
   "devDependencies": {
     "babel": "^6.23.0",
