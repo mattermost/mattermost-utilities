@@ -216,6 +216,18 @@ func addDynamicallyGeneratedStrings(i18nStrings *map[string]bool) {
 	(*i18nStrings)["model.user.is_valid.pwd_uppercase_number.app_error"] = true
 	(*i18nStrings)["model.user.is_valid.pwd_uppercase_number_symbol.app_error"] = true
 	(*i18nStrings)["model.user.is_valid.pwd_uppercase_symbol.app_error"] = true
+	(*i18nStrings)["January"] = true
+	(*i18nStrings)["February"] = true
+	(*i18nStrings)["March"] = true
+	(*i18nStrings)["April"] = true
+	(*i18nStrings)["May"] = true
+	(*i18nStrings)["June"] = true
+	(*i18nStrings)["July"] = true
+	(*i18nStrings)["August"] = true
+	(*i18nStrings)["September"] = true
+	(*i18nStrings)["October"] = true
+	(*i18nStrings)["November"] = true
+	(*i18nStrings)["December"] = true
 }
 
 func extractByFuncName(name string, args []ast.Expr) *string {
