@@ -64,6 +64,16 @@ const ignored = yargs.
                 () => { /* empty function */ },
                 i18nHandlers.i18nCheck,
             ).
+            command('check-mobile',
+                'Read the source code, find all the translations string, and show you the differences with the current i18n/en.json files',
+                () => { /* empty function */ },
+                i18nHandlers.i18nCheckMobile,
+            ).
+            command('check-webapp',
+                'Read the source code, find all the translations string, and show you the differences with the current i18n/en.json files',
+                () => { /* empty function */ },
+                i18nHandlers.i18nCheckWebapp,
+            ).
             option('webapp-dir', {
                 describe: 'webapp source code directory',
                 default: '../mattermost-webapp',

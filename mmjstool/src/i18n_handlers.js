@@ -63,6 +63,63 @@ export function i18nCheck(argv) {
     });
 }
 
+export function i18nCheckWebapp(argv) {
+    const webappDir = argv['webapp-dir'];
+    const mobileDir = argv['mobile-dir'];
+
+    const currentTranslations = getCurrentTranslations(webappDir, mobileDir);
+    const currentWebappKeys = new Set(Object.keys(currentTranslations.webapp));
+
+    i18nExtractLib.extractFromDirectory([argv['webapp-dir']], ['dist', 'node_modules', 'non_npm_dependencies', 'tests', 'components/gif_picker/static/gif.worker.js']).then((translationsWebapp) => {
+        const webappKeys = new Set(Object.keys(translationsWebapp));
+
+        let changed = false;
+        for (const key of difference(currentWebappKeys, webappKeys)) {
+            // eslint-disable-next-line no-console
+            console.log('Removed from webapp:', key);
+            changed = true;
+        }
+        for (const key of difference(webappKeys, currentWebappKeys)) {
+            // eslint-disable-next-line no-console
+            console.log('Added to webapp:', key);
+            changed = true;
+        }
+        if (changed) {
+            console.log('Changes found');
+            process.exit(1);
+        }
+    });
+}
+
+export function i18nCheckMobile(argv) {
+    const webappDir = argv['webapp-dir'];
+    const mobileDir = argv['mobile-dir'];
+
+    const currentTranslations = getCurrentTranslations(webappDir, mobileDir);
+    const currentMobileKeys = new Set(Object.keys(currentTranslations.mobile));
+
+    i18nExtractLib.extractFromDirectory([argv['mobile-dir'] + '/app', argv['mobile-dir'] + '/share_extension'], []).then((translationsMobile) => {
+        const mobileKeys = new Set(Object.keys(translationsMobile));
+
+        let changed = false;
+        for (const key of difference(currentMobileKeys, mobileKeys)) {
+            // eslint-disable-next-line no-console
+            console.log('Removed from mobile:', key);
+            changed = true;
+        }
+        for (const key of difference(mobileKeys, currentMobileKeys)) {
+            // eslint-disable-next-line no-console
+            console.log('Added to mobile:', key);
+            changed = true;
+        }
+
+        if (changed) {
+            console.log('Changes found');
+            process.exit(1);
+        }
+    });
+}
+
 export function i18nExtractWebapp(argv) {
     const webappDir = argv['webapp-dir'];
     const mobileDir = argv['mobile-dir'];
