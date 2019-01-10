@@ -33,6 +33,12 @@ function patchAstWalk() {
         });
     };
 
+    astwalk.base.JSXFragment = (node, st, c) => {
+        node.children.forEach((n) => {
+            c(n, st);
+        });
+    };
+
     astwalk.base.JSXOpeningElement = (node, st, c) => {
         node.attributes.forEach((n) => {
             c(n, st);
