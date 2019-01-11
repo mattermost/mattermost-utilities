@@ -4,61 +4,9 @@
 const fs = require('fs');
 
 const FileHound = require('filehound');
-const flowRemoveTypes = require('flow-remove-types');
 
-const {Parser} = require('acorn');
-const astwalk = require('acorn-walk');
-const {base} = require('acorn-jsx-walk');
-const acornJsx = require('acorn-jsx');
-const acornStage3 = require('acorn-stage3');
-
-const {acornOptionalChaining} = require('./acorn-optional-chaining');
-
-const acorn = Parser.extend(acornStage3, acornJsx(), acornOptionalChaining);
-
-function patchAstWalk() {
-    astwalk.base.ClassProperty = (node, st, c) => {
-        c(node.key, st);
-        c(node.value, st);
-    };
-    astwalk.base.FieldDefinition = (node, st, c) => {
-        c(node.key, st);
-        c(node.value, st);
-    };
-    astwalk.base.Import = () => { /* empty function */ };
-    astwalk.base.JSXElement = (node, st, c) => {
-        c(node.openingElement, st);
-        node.children.forEach((n) => {
-            c(n, st);
-        });
-    };
-
-    astwalk.base.JSXFragment = (node, st, c) => {
-        node.children.forEach((n) => {
-            c(n, st);
-        });
-    };
-
-    astwalk.base.JSXOpeningElement = (node, st, c) => {
-        node.attributes.forEach((n) => {
-            c(n, st);
-        });
-    };
-
-    astwalk.base.JSXAttribute = (node, st, c) => {
-        c(node.name, st);
-        c(node.value, st);
-    };
-    astwalk.base.JSXSpreadAttribute = (node, st, c) => {
-        c(node.argument, st);
-    };
-    astwalk.base.JSXText = () => { /* empty function */ };
-    astwalk.base.JSXIdentifier = () => { /* empty function */ };
-    astwalk.base.JSXExpressionContainer = base.JSXExpressionContainer;
-    astwalk.base.JSXEmptyExpression = () => { /* empty function */ };
-}
-
-patchAstWalk();
+const Parser = require('flow-parser');
+const walk = require('estree-walk');
 
 export function extractFromDirectory(dirPaths, filters = []) {
     return new Promise((resolve) => {
@@ -76,7 +24,7 @@ export function extractFromDirectory(dirPaths, filters = []) {
                                 Object.assign(translations, extractFromFile(file));
                             } catch (e) {
                                 console.log('Unable to parse file:', file);
-                                console.log('Error in: line', e.loc.line, 'column', e.loc.column);
+                                console.log('Error in: line', e.loc && e.loc.line, 'column', e.loc && e.loc.column);
                                 return;
                             }
                         }
@@ -95,20 +43,14 @@ function extractFromFile(path) {
     const translations = {};
 
     var code = fs.readFileSync(path, 'utf-8');
-    const ast = acorn.parse(flowRemoveTypes(code), {
-        plugins: {
-            stage3: true,
-            jsx: true,
-            staticClassPropertyInitializer: true,
-            ignoreOptionalChaining: true,
-        },
-        ecmaVersion: 10,
-        sourceType: 'module',
+    const ast = Parser.parse(code, {
+        esproposal_class_static_fields: true,
+        esproposal_class_instance_fields: true,
+        esproposal_optional_chaining: true,
     });
 
-    // Make it compatible with our source code
-    astwalk.full(ast, (node, st, type) => {
-        if (type === 'CallExpression') {
+    walk(ast, {
+        CallExpression: (node) => {
             if ((node.callee.type === 'MemberExpression' && node.callee.property.name === 'localizeMessage') ||
                 node.callee.name === 'localizeMessage') {
                 const id = node.arguments[0] && node.arguments[0].value;
@@ -142,9 +84,8 @@ function extractFromFile(path) {
                 const id = node.arguments[0] && node.arguments[0].value;
                 translations[id] = '';
             }
-        }
-
-        if (type === 'JSXOpeningElement') {
+        },
+        JSXOpeningElement: (node) => {
             if (node.name.name === 'FormattedText' || node.name.name === 'FormattedMessage' || node.name.name === 'FormattedHTMLMessage' || node.name.name === 'FormattedMarkdownMessage' || node.name.name === 'FormattedMarkdownText' || node.name.name === 'FormattedAdminHeader') {
                 let id = '';
                 let defaultMessage = '';
@@ -167,7 +108,7 @@ function extractFromFile(path) {
                     translations[id] = defaultMessage;
                 }
             }
-        }
+        },
     });
     return translations;
 }
