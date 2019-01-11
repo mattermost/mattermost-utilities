@@ -1,5 +1,7 @@
 .DS_Store
 mattermost.mattermost-license
+node_modules
+mmjstool.bin
 
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o

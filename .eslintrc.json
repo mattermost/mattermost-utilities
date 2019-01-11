@@ -1,0 +1,66 @@
+{
+  "extends": [
+    "./node_modules/eslint-config-mattermost/.eslintrc.json"
+  ],
+  "plugins": [
+    "import"
+  ],
+  "env": {
+    "jest": true
+  },
+  "settings": {
+    "import/resolver": "webpack"
+  },
+  "rules": {
+    "import/no-unresolved": 2,
+    "import/order": [
+      "error",
+      {
+        "newlines-between": "always-and-inside-groups",
+        "groups": [
+          "builtin",
+          "external",
+          [
+            "internal",
+            "parent"
+          ],
+          "sibling",
+          "index"
+        ]
+      }
+    ],
+    "no-magic-numbers": [
+      1,
+      {
+        "ignore": [
+          -1,
+          0,
+          1,
+          2
+        ],
+        "enforceConst": true,
+        "detectObjects": true
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["tests/**"],
+      "env": {
+        "jest": true
+      },
+      "rules": {
+        "func-names": 0,
+        "global-require": 0,
+        "new-cap": 0,
+        "prefer-arrow-callback": 0
+      }
+    },
+    {
+      "files": ["tests/e2e/**"],
+      "rules": {
+        "no-unused-expressions": 0
+      }
+    }
+  ]
+}

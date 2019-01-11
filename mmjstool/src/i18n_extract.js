@@ -58,7 +58,7 @@ function patchAstWalk() {
     astwalk.base.JSXEmptyExpression = () => { /* empty function */ };
 }
 
-patchAstWalk()
+patchAstWalk();
 
 export function extractFromDirectory(dirPaths, filters = []) {
     return new Promise((resolve) => {
@@ -75,8 +75,8 @@ export function extractFromDirectory(dirPaths, filters = []) {
                             try {
                                 Object.assign(translations, extractFromFile(file));
                             } catch (e) {
-                                console.log("Unable to parse file:", file);
-                                console.log("Error in: line", e.loc.line, "column", e.loc.column);
+                                console.log('Unable to parse file:', file);
+                                console.log('Error in: line', e.loc.line, 'column', e.loc.column);
                                 return;
                             }
                         }
