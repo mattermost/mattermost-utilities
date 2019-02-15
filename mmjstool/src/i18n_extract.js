@@ -8,6 +8,16 @@ const FileHound = require('filehound');
 const Parser = require('flow-parser');
 const walk = require('estree-walk');
 
+const translatableComponents = {
+    FormattedText: [{id: 'id', default: 'defaultMessage'}],
+    FormattedMessage: [{id: 'id', default: 'defaultMessage'}],
+    FormattedHTMLMessage: [{id: 'id', default: 'defaultMessage'}],
+    FormattedMarkdownMessage: [{id: 'id', default: 'defaultMessage'}],
+    FormattedMarkdownText: [{id: 'id', default: 'defaultMessage'}],
+    FormattedAdminHeader: [{id: 'id', default: 'defaultMessage'}],
+    LocalizedInput: ['placeholder'],
+};
+
 export function extractFromDirectory(dirPaths, filters = []) {
     return new Promise((resolve) => {
         const promises = dirPaths.map((dirPath) => {
@@ -23,6 +33,7 @@ export function extractFromDirectory(dirPaths, filters = []) {
                             try {
                                 Object.assign(translations, extractFromFile(file));
                             } catch (e) {
+                                console.log(e);
                                 console.log('Unable to parse file:', file);
                                 console.log('Error in: line', e.loc && e.loc.line, 'column', e.loc && e.loc.column);
                                 return;
@@ -86,25 +97,39 @@ function extractFromFile(path) {
             }
         },
         JSXOpeningElement: (node) => {
-            if (node.name.name === 'FormattedText' || node.name.name === 'FormattedMessage' || node.name.name === 'FormattedHTMLMessage' || node.name.name === 'FormattedMarkdownMessage' || node.name.name === 'FormattedMarkdownText' || node.name.name === 'FormattedAdminHeader') {
+            const translatableProps = translatableComponents[node.name.name] || [];
+            for (const translatableProp of translatableProps) {
                 let id = '';
                 let defaultMessage = '';
-                for (var attribute of node.attributes) {
-                    if (attribute.value && attribute.value.expression && attribute.name && attribute.name.name === 'id') {
-                        id = attribute.value.expression.value;
+
+                if (typeof translatableProp === 'string') {
+                    for (var attribute of node.attributes) {
+                        if (attribute.value && attribute.value.expression && attribute.value.expression.value && attribute.name && attribute.name.name === translatableProp) {
+                            id = attribute.value.expression.value.id;
+                            defaultMessage = attribute.value.expression.value.defaultMessage;
+                        }
+                        if (attribute.value && attribute.value.value && attribute.name && attribute.name.name === translatableProp) {
+                            id = attribute.value.value.id;
+                            defaultMessage = attribute.value.value.defaultMessage;
+                        }
                     }
-                    if (attribute.value && attribute.value.value && attribute.name && attribute.name.name === 'id') {
-                        id = attribute.value.value;
-                    }
-                    if (attribute.value && attribute.value.expression && attribute.name && attribute.name.name === 'defaultMessage') {
-                        defaultMessage = attribute.value.expression.value;
-                    }
-                    if (attribute.value && attribute.value.value && attribute.name && attribute.name.name === 'defaultMessage') {
-                        defaultMessage = attribute.value.value;
+                } else {
+                    for (var attribute of node.attributes) {
+                        if (attribute.value && attribute.value.expression && attribute.name && attribute.name.name === translatableProp.id) {
+                            id = attribute.value.expression.value;
+                        }
+                        if (attribute.value && attribute.value.value && attribute.name && attribute.name.name === translatableProp.id) {
+                            id = attribute.value.value;
+                        }
+                        if (attribute.value && attribute.value.expression && attribute.name && attribute.name.name === translatableProp.default) {
+                            defaultMessage = attribute.value.expression.value;
+                        }
+                        if (attribute.value && attribute.value.value && attribute.name && attribute.name.name === translatableProp.default) {
+                            defaultMessage = attribute.value.value;
+                        }
                     }
                 }
-
-                if (id && id !== '') {
+                if (id) {
                     translations[id] = defaultMessage;
                 }
             }
