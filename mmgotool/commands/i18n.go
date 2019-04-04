@@ -251,6 +251,15 @@ func extractByFuncName(name string, args []ast.Expr) *string {
 			return nil
 		}
 		return &key.Value
+	} else if name == "newAppError" {
+		if len(args) < 1 {
+			return nil
+		}
+		key, ok := args[0].(*ast.BasicLit)
+		if !ok {
+			return nil
+		}
+		return &key.Value
 	} else if name == "translateFunc" {
 		if len(args) < 1 {
 			return nil
