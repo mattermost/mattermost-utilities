@@ -4,13 +4,13 @@
   "description": "Mattermost js source code utilities",
   "main": "mmjstool/build/src/index.js",
   "bin": {
-    "mmjstool": "./mmjstool.bin"
+    "mmjstool": "./mmjstool.js"
   },
   "scripts": {
     "check": "eslint --ignore-pattern node_modules --ignore-pattern build --ext .js . --quiet",
     "fix": "eslint --ignore-pattern node_modules --ignore-pattern build --ext .js . --quiet --fix",
     "babel": "babel --presets @babel/env mmjstool/src/index.js mmjstool/src/i18n_extract.js mmjstool/src/i18n_handlers.js -d mmjstool/build",
-    "build": "babel --presets @babel/env mmjstool/src/index.js mmjstool/src/i18n_extract.js mmjstool/src/i18n_handlers.js -o mmjstool.bin",
+    "build": "babel --presets @babel/env mmjstool/src/index.js mmjstool/src/i18n_extract.js mmjstool/src/i18n_handlers.js -o mmjstool.js",
     "pack": "pkg mmjstool/build/index.js -o mmjstool.bin"
   },
   "author": "Jesús Espino <jesus.espino@mattermost.com>",
