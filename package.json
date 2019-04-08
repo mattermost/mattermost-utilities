@@ -11,7 +11,7 @@
     "fix": "eslint --ignore-pattern node_modules --ignore-pattern build --ext .js . --quiet --fix",
     "babel": "babel --presets @babel/env mmjstool/src/index.js mmjstool/src/i18n_extract.js mmjstool/src/i18n_handlers.js -d mmjstool/build",
     "build": "webpack",
-    "pack": "pkg mmjstool/build/index.js -o mmjstool.bin"
+    "prepare": "webpack"
   },
   "author": "Jesús Espino <jesus.espino@mattermost.com>",
   "dependencies": {
