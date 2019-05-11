@@ -42666,7 +42666,7 @@ function i18nExtractWebapp(argv) {
 
         const options = {ignoreCase: true, reverse: false, depth: 1};
         const sortedWebappTranslations = sortJson(currentTranslations.webapp, options);
-        fs.writeFileSync(path.join(webappDir, 'i18n', 'en.json'), JSON.stringify(sortedWebappTranslations, null, 2));
+        fs.writeFileSync(path.join(webappDir, 'i18n', 'en.json'), JSON.stringify(sortedWebappTranslations, null, 2) + '\n');
     });
 }
 
@@ -42689,7 +42689,7 @@ function i18nExtractMobile(argv) {
 
         const options = {ignoreCase: true, reverse: false, depth: 1};
         const sortedMobileTranslations = sortJson(currentTranslations.mobile, options);
-        fs.writeFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', 'en.json'), JSON.stringify(sortedMobileTranslations, null, 2));
+        fs.writeFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', 'en.json'), JSON.stringify(sortedMobileTranslations, null, 2) + '\n');
     });
 }
 
@@ -42711,7 +42711,7 @@ function i18nCombine(argv) {
 
     const options = {ignoreCase: true, reverse: false, depth: 1};
     const sortedTranslations = sortJson(translations, options);
-    fs.writeFileSync(outputFile, JSON.stringify(sortedTranslations, null, 2));
+    fs.writeFileSync(outputFile, JSON.stringify(sortedTranslations, null, 2) + '\n');
 }
 
 function i18nSort(argv) {
@@ -42723,7 +42723,7 @@ function i18nSort(argv) {
 
     const options = {ignoreCase: true, reverse: false, depth: 1};
     const sortedTranslations = sortJson(itemTranslations, options);
-    fs.writeFileSync(outputFile, JSON.stringify(sortedTranslations, null, 2));
+    fs.writeFileSync(outputFile, JSON.stringify(sortedTranslations, null, 2) + '\n');
 }
 
 function i18nSplit(argv) {
@@ -42755,8 +42755,8 @@ function i18nSplit(argv) {
             const options = {ignoreCase: true, reverse: false, depth: 1};
             const sortedWebappTranslations = sortJson(translationsWebappOutput, options);
             const sortedMobileTranslations = sortJson(translationsMobileOutput, options);
-            fs.writeFileSync(path.join(webappDir, 'i18n', filename), JSON.stringify(sortedWebappTranslations, null, 2));
-            fs.writeFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', filename), JSON.stringify(sortedMobileTranslations, null, 2));
+            fs.writeFileSync(path.join(webappDir, 'i18n', filename), JSON.stringify(sortedWebappTranslations, null, 2) + '\n');
+            fs.writeFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', filename), JSON.stringify(sortedMobileTranslations, null, 2) + '\n');
         }
     });
 }
@@ -43125,7 +43125,7 @@ function extractFromFile(path) {
                 let defaultMessage = '';
 
                 if (typeof translatableProp === 'string') {
-                    for (var attribute of node.attributes) {
+                    for (const attribute of node.attributes) {
                         if (attribute.value && attribute.value.expression && attribute.value.expression.value && attribute.name && attribute.name.name === translatableProp) {
                             id = attribute.value.expression.value.id;
                             defaultMessage = attribute.value.expression.value.defaultMessage;
@@ -43136,7 +43136,7 @@ function extractFromFile(path) {
                         }
                     }
                 } else {
-                    for (var attribute of node.attributes) {
+                    for (const attribute of node.attributes) {
                         if (attribute.value && attribute.value.expression && attribute.name && attribute.name.name === translatableProp.id) {
                             id = attribute.value.expression.value;
                         }
