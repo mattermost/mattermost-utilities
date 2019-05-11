@@ -103,7 +103,7 @@ function extractFromFile(path) {
                 let defaultMessage = '';
 
                 if (typeof translatableProp === 'string') {
-                    for (var attribute of node.attributes) {
+                    for (const attribute of node.attributes) {
                         if (attribute.value && attribute.value.expression && attribute.value.expression.value && attribute.name && attribute.name.name === translatableProp) {
                             id = attribute.value.expression.value.id;
                             defaultMessage = attribute.value.expression.value.defaultMessage;
@@ -114,7 +114,7 @@ function extractFromFile(path) {
                         }
                     }
                 } else {
-                    for (var attribute of node.attributes) {
+                    for (const attribute of node.attributes) {
                         if (attribute.value && attribute.value.expression && attribute.name && attribute.name.name === translatableProp.id) {
                             id = attribute.value.expression.value;
                         }
