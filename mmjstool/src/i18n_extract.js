@@ -26,7 +26,7 @@ export function extractFromDirectory(dirPaths, filters = []) {
                 FileHound.create().
                     paths(dirPath).
                     discard(filters).
-                    ext('js', 'jsx').
+                    ext('js', 'jsx', 'ts', 'tsx').
                     find().
                     then((files) => {
                         for (const file of files) {
