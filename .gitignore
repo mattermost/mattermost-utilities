@@ -51,3 +51,5 @@ tags
 
 debug
 client
+
+__pycache__
