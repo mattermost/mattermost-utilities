@@ -1,5 +1,6 @@
 import requests
 import click
+import pprint
 from requests.auth import HTTPBasicAuth
 
 from utils import create_github_issues

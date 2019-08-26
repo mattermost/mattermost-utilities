@@ -1,5 +1,6 @@
 import click
 import requests
+import pprint
 from requests.auth import HTTPBasicAuth
 from github import Github
 
@@ -31,7 +32,7 @@ def cli(jira_token, jira_username, github_token, repo, labels, dry_run, debug, i
     query = " OR ".join(map(lambda x: "key = MM-{}".format(x), issue_numbers))
     data = {
             "jql":"project = MM AND {}".format(query),
-            "maxResults": 1,
+            "maxResults": len(issue_numbers),
             "fields": ["summary", "description"],
     }
     resp = requests.post(
