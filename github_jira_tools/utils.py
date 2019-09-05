@@ -23,6 +23,7 @@ JIRA: https://mattermost.atlassian.net/browse/{{TICKET}}
     if dry_run:
         print('We haven\'t created the github ticket because --dry-run flag was detected. Tickets information:')
 
+    result = ""
     for issue in issues:
         title = issue['fields']['summary']
         key = issue['key']
@@ -40,7 +41,8 @@ JIRA: https://mattermost.atlassian.net/browse/{{TICKET}}
                 labels=final_labels,
             )
         except Exception as e:
-            return "Unable to create issue for jira issue {}. error: {}".format(key, e)
+            result += "Unable to create issue for jira issue {}. error: {}\n".format(key, e)
+            continue
 
         try:
             resp = requests.put(
@@ -53,7 +55,8 @@ JIRA: https://mattermost.atlassian.net/browse/{{TICKET}}
                 auth=HTTPBasicAuth(jira_username, jira_token)
             )
         except Exception as e:
-            return "Unable to update jira issue {}. error: {}".format(key, e)
+            result += "Unable to update jira issue {}. error: {}\n".format(key, e)
+            continue
 
-        return "Created github issue for the jira issue {} here: {}".format(key, new_issue.html_url)
-    return ''
+        result += "Created github issue for the jira issue {} here: {}\n".format(key, new_issue.html_url)
+    return result
