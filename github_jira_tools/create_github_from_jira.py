@@ -44,7 +44,7 @@ def cli(jira_token, jira_username, github_token, repo, labels, dry_run, debug, i
         pprint.pprint(resp.json())
 
     issues = resp.json()['issues']
-    create_github_issues(jira_username, jira_token, github_token, repo, labels, issues, dry_run)
+    print(create_github_issues(jira_username, jira_token, github_token, repo, labels, issues, dry_run))
 
 if __name__ == "__main__":
     cli()

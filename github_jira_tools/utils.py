@@ -40,8 +40,7 @@ JIRA: https://mattermost.atlassian.net/browse/{{TICKET}}
                 labels=final_labels,
             )
         except Exception as e:
-            print("Unable to create issue for jira issue {}. error: {}".format(key, e))
-            return
+            return "Unable to create issue for jira issue {}. error: {}".format(key, e)
 
         try:
             resp = requests.put(
@@ -54,8 +53,7 @@ JIRA: https://mattermost.atlassian.net/browse/{{TICKET}}
                 auth=HTTPBasicAuth(jira_username, jira_token)
             )
         except Exception as e:
-            print("Unable to update jira issue {}. error: {}".format(key, e))
-            return
+            return "Unable to update jira issue {}. error: {}".format(key, e)
 
-        print("Created github issue for the jira issue {} here: {}".format(key, new_issue.html_url))
-
+        return "Created github issue for the jira issue {} here: {}".format(key, new_issue.html_url)
+    return ''
