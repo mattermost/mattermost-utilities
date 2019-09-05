@@ -14,7 +14,7 @@ spec:
         spec:
           containers:
           - name: sync-helpwanted-tickets
-            image: mattermost/sync-helpwanted-tickets:1.0.0
+            image: mattermost/sync-helpwanted-tickets:1.0.1
             imagePullPolicy: IfNotPresent
             env:
             - name: GITHUB_TOKEN
@@ -32,4 +32,9 @@ spec:
                 secretKeyRef:
                   name: synchelptickets
                   key: JIRA_USERNAME
+            - name: WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: synchelptickets
+                  key: WEBHOOK_URL
           restartPolicy: Never
