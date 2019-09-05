@@ -28,8 +28,6 @@ def cli(jira_username, jira_token, github_token, dry_run, debug):
 
     if len(issues) > 0:
         create_github_issues(jira_username, jira_token, github_token, 'mattermost/mattermost-server', ['Help Wanted', 'Up For Grabs'], issues, dry_run)
-    else:
-        print("No new issues found")
 
 if __name__ == "__main__":
     cli()
