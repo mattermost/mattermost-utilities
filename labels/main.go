@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"flag"
+	"os"
 	"sync"
 
 	"github.com/google/go-github/v28/github"
@@ -10,20 +10,18 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var token = flag.String("token", "", "GitHub access token")
-
 const org = "mattermost"
 
 func main() {
-	flag.Parse()
-	if *token == "" {
+	token := os.Getenv("GITHUB_TOKEN")
+	if token == "" {
 		log.Fatal("You need to provide an access token")
 	}
 
 	log.Info("Starting syncing labels")
 
 	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: *token},
+		&oauth2.Token{AccessToken: token},
 	)
 	tc := oauth2.NewClient(context.Background(), ts)
 	client := github.NewClient(tc)
