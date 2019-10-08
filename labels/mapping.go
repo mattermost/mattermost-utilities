@@ -1,7 +1,33 @@
 package main
 
-var mapping = map[string][]Label{
-	"mattermost-plugin-giphy": MergeLabels(core, plugin, helpWanted),
+var pluginLabels = MergeLabels(core, plugin, helpWanted, docs)
+
+var pluginRepos = []string{
+	"mattermost-oembed-plugin",
+	"mattermost-plugin-antivirus",
+	"mattermost-plugin-autolink",
+	"mattermost-plugin-aws-SNS",
+	"mattermost-plugin-custom-attributes",
+	"mattermost-plugin-giphy",
+	"mattermost-plugin-giphy",
+	"mattermost-plugin-github",
+	"mattermost-plugin-gitlab",
+	"mattermost-plugin-jenkins",
+	"mattermost-plugin-jira",
+	"mattermost-plugin-mailermost",
+	"mattermost-plugin-suggestions",
+	"mattermost-plugin-webex",
+	"mattermost-plugin-welcomebot",
+	// "mattermost-plugin-workflow",
+	"mattermost-plugin-zoom",
+}
+
+var mapping = map[string][]Label{}
+
+func init() {
+	for _, repo := range pluginRepos {
+		mapping[repo] = pluginLabels
+	}
 }
 
 var core = []Label{
@@ -10,7 +36,7 @@ var core = []Label{
 	{"2: QA Review", "Requires review by a QA tester", "7cdfe2"},
 	{"3: Reviews Complete", "All reviewers have approved the pull request", "0e8a16"},
 	{"Awaiting Submitter Action", "Blocked on the author", "b60205"},
-	{"Do Not Merge/Awaiting PR", "Awaiting another pull request before merging (e.g. server changes)", "a32735"},
+	// {"Do Not Merge/Awaiting PR", "Awaiting another pull request before merging (e.g. server changes)", "a32735"},
 	{"Do Not Merge", "Should not be merged until this label is removed", "a32735"},
 	{"Invalid", "This doesn't seem right", "e4e669"},
 	{"Lifecycle/frozen", "", "d3e2f0"},
@@ -21,11 +47,11 @@ var core = []Label{
 
 var plugin = []Label{
 	{"Bug", "Something isn't working", "d73a4a"},
-	{"Duplicate", "This issue or pull request already exists", "cfd3d7"},
+	// {"Duplicate", "This issue or pull request already exists", "cfd3d7"},
 	{"Enhancement", "New feature or request", "a2eeef"},
 	{"Needs Mattermost Changes", "Requires changes to the Mattermost Plugin tookit", "9c14c9"},
 	{"Question", "Further information is requested", "d876e3"},
-	{"Wontfix", "This will not be worked on", "ffffff"},
+	// {"Wontfix", "This will not be worked on", "ffffff"},
 }
 
 var helpWanted = []Label{
@@ -35,8 +61,10 @@ var helpWanted = []Label{
 	{"Good First Issue", "Suitable for first-time contributors", "7057ff"},
 	{"Hacktoberfest", "", "dc7d02"},
 	{"Help Wanted", "Community help wanted", "33aa3f"},
-	{"Needs spec", "Needs further specification to be a good help wanted ticket", "88acea"},
+	// {"Needs spec", "Needs further specification to be a good help wanted ticket", "88acea"},
 	{"Tech/Go", "", "0e8a16"},
+	{"Tech/JavaScript", "", "f9d0c4"},
+	{"Tech/TypeScript", "", "c9ffff"},
 	{"Tech/ReactJS", "", "1d76db"},
 	{"Up For Grabs", "Ready for help from the community. Removed when someone volunteers", "8B4500"},
 }
