@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"os"
 	"sync"
 
@@ -12,10 +13,29 @@ import (
 
 const org = "mattermost"
 
+var useRepo = flag.String("repo", "", "Github Mattermost repository name")
+var useCoreLabels = flag.Bool("core-labels", true, "Core set of Mattermost labels")
+var usePluginLabels = flag.Bool("plugin-labels", false, "Mattermost plugin-specific labels")
+
 func main() {
 	token := os.Getenv("GITHUB_TOKEN")
 	if token == "" {
 		log.Fatal("You need to provide an access token")
+	}
+
+	flag.Parse()
+	mapping := defaultMapping
+	if len(*useRepo) != 0 {
+		labels := defaultLabels
+		switch {
+		case *usePluginLabels:
+			labels = pluginLabels
+		case *useCoreLabels:
+			labels = coreLabels
+		}
+		mapping = map[string][]Label{
+			*useRepo: labels,
+		}
 	}
 
 	log.Info("Starting syncing labels")
