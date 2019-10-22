@@ -1,8 +1,8 @@
 package main
 
-var coreLabels = MergeLabels(pullRequest, issue, helpWanted, docs)
-var pluginLabels = MergeLabels(coreLabels, plugin)
 var defaultLabels = coreLabels
+var coreLabels = MergeLabels(pullRequest)
+var pluginLabels = MergeLabels(coreLabels, issue, helpWanted, docs, plugin)
 
 var defaultMapping = map[string][]Label{
 	"mattermost-oembed-plugin":            pluginLabels,
@@ -19,7 +19,7 @@ var defaultMapping = map[string][]Label{
 	"mattermost-plugin-suggestions":       pluginLabels,
 	"mattermost-plugin-webex":             pluginLabels,
 	"mattermost-plugin-welcomebot":        pluginLabels,
-	"mattermost-plugin-workflow":          pluginLabels,
+	"mattermost-plugin-workflow":          MergeLabels(coreLabels, issue, docs, plugin),
 	"mattermost-plugin-zoom":              pluginLabels,
 }
 
@@ -38,12 +38,12 @@ var pullRequest = []Label{
 }
 
 var issue = []Label{
-	{"Triage", "", "efcb6e"},
 	{"Bug", "Something isn't working", "d73a4a"},
-	{"Enhancement", "New feature or request", "a2eeef"},
-	{"Question", "Further information is requested", "d876e3"},
-	{"Invalid", "This doesn't seem right", "e4e669"},
 	{"Duplicate", "This issue or pull request already exists", "cfd3d7"},
+	{"Enhancement", "New feature or request", "a2eeef"},
+	{"Invalid", "This doesn't seem right", "e4e669"},
+	{"Question", "Further information is requested", "d876e3"},
+	{"Triage", "", "efcb6e"},
 	{"Wontfix", "This will not be worked on", "ffffff"},
 }
 
