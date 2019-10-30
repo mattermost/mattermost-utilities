@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"os"
 	"sync"
 
@@ -12,10 +13,39 @@ import (
 
 const org = "mattermost"
 
+var useDefault = flag.Bool("default", false, "Updates default repos with the default labels, can not be combined with other flags")
+var useRepo = flag.String("repo", "", "Github Mattermost repository name")
+var useCoreLabels = flag.Bool("core-labels", false, "Core set of Mattermost labels")
+var usePluginLabels = flag.Bool("plugin-labels", false, "Mattermost plugin-specific labels")
+
 func main() {
 	token := os.Getenv("GITHUB_TOKEN")
 	if token == "" {
 		log.Fatal("You need to provide an access token")
+	}
+	flag.Parse()
+
+	var mapping map[string][]Label
+	switch {
+	case *useDefault:
+		mapping = defaultMapping
+
+	case len(*useRepo) != 0:
+		labels := defaultLabels
+		switch {
+		case *usePluginLabels:
+			labels = pluginLabels
+		case *useCoreLabels:
+			labels = coreLabels
+		default:
+			log.Fatalf("You need to specify labels to set on %q, e.g. --core-labels or --plugin-labels", *useRepo)
+		}
+		mapping = map[string][]Label{
+			*useRepo: labels,
+		}
+
+	default:
+		log.Fatalf("You need to specify the repo to apply labels to, e.g. --repo=mattermost-test, or run the default settings with --default")
 	}
 
 	log.Info("Starting syncing labels")
