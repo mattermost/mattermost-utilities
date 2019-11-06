@@ -49,6 +49,8 @@ var issue = []Label{
 
 var plugin = []Label{
 	{"Needs Mattermost Changes", "Requires changes to the Mattermost Plugin tookit", "9c14c9"},
+	{"Setup Cloud Test Server", "Setup a test server using Mattermost Cloud", "0052cc"},
+	{"Setup HA Cloud Test Server", "Setup an HA test server using Mattermost Cloud", "00efff"},
 }
 
 var helpWanted = []Label{
