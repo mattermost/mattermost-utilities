@@ -14,7 +14,7 @@ from utils import create_github_issues
 @click.option('--debug/--no-debug', help='Dump debugging information.', default=False)
 def cli(jira_username, jira_token, github_token, webhook_url, dry_run, debug):
     data = {
-            "jql":"project = MM AND status = Open AND fixversion = \"Help Wanted\" AND \"GITHUB ISSUE\" IS EMPTY AND type != EPIC",
+            "jql":"project = MM AND status in (Open, Reopened) AND fixversion = \"Help Wanted\" AND \"GITHUB ISSUE\" IS EMPTY AND type != EPIC",
             "maxResults": 100,
             "fields": ["summary", "description"],
     }
