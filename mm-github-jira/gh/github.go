@@ -16,6 +16,11 @@ type Client struct {
 	client *github.Client
 }
 
+type AddLabelsRequest struct {
+	Repository string
+	Labels     []string
+}
+
 func NewClient(token string) *Client {
 	tc := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token}))
 	client := github.NewClient(tc)
