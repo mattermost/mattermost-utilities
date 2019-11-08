@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/mattermost/mattermost-utilities/mm-github-jira/gh"
+	"github.com/mattermost/mattermost-utilities/mm-github-jira/service"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -36,8 +36,8 @@ func addLabels(cmd *cobra.Command, args []string) error {
 		return errors.New("at least one label should be applied")
 	}
 
-	client := gh.NewClient(GithubToken)
-	err = client.AddLabelsToIssues(gh.AddLabelsRequest{
+	githubClient := service.NewGithubClient(GithubToken)
+	err = githubClient.AddLabelsToIssues(&service.AddLabelsRequest{
 		Repository: repository,
 		Labels:     labels,
 	}, args...)

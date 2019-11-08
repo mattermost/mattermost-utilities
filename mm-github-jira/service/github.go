@@ -1,4 +1,4 @@
-package gh
+package service
 
 import (
 	"context"
@@ -7,12 +7,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/andygrunwald/go-jira"
+
 	"github.com/google/go-github/v28/github"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 )
 
-type Client struct {
+type GithubClient struct {
 	client *github.Client
 }
 
@@ -21,13 +23,17 @@ type AddLabelsRequest struct {
 	Labels     []string
 }
 
-func NewClient(token string) *Client {
-	tc := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token}))
-	client := github.NewClient(tc)
-	return &Client{client: client}
+type CreateIssuesRequest struct {
+	AddLabelsRequest
 }
 
-func (c *Client) AddLabelsToIssues(req AddLabelsRequest, issues ...string) error {
+func NewGithubClient(token string) *GithubClient {
+	tc := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token}))
+	client := github.NewClient(tc)
+	return &GithubClient{client: client}
+}
+
+func (gc *GithubClient) AddLabelsToIssues(req *AddLabelsRequest, issues ...string) error {
 	repository := strings.TrimSpace(req.Repository)
 	repoParts := strings.Split(repository, "/")
 
@@ -44,13 +50,13 @@ func (c *Client) AddLabelsToIssues(req AddLabelsRequest, issues ...string) error
 			continue
 		}
 
-		issue, _, err := c.client.Issues.Get(ctx, owner, repo, issueNumber)
+		issue, _, err := gc.client.Issues.Get(ctx, owner, repo, issueNumber)
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "could not get issue with number %d: %v\n", issueNumber, err)
 			continue
 		}
 
-		_, _, err = c.client.Issues.AddLabelsToIssue(ctx, owner, repo, *issue.Number, req.Labels)
+		_, _, err = gc.client.Issues.AddLabelsToIssue(ctx, owner, repo, *issue.Number, req.Labels)
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "could not add labels to issue with number %d: %v\n", issueNumber, err)
 			continue
@@ -58,4 +64,8 @@ func (c *Client) AddLabelsToIssues(req AddLabelsRequest, issues ...string) error
 	}
 
 	return nil
+}
+
+func (gc *GithubClient) CreateIssues(req *CreateIssuesRequest, issues []jira.Issue) {
+
 }

@@ -3,6 +3,7 @@ module github.com/mattermost/mattermost-utilities/mm-github-jira
 go 1.13
 
 require (
+	github.com/andygrunwald/go-jira v1.11.1
 	github.com/google/go-github/v28 v28.1.1
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/cobra v0.0.5
