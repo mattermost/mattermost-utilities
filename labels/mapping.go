@@ -26,6 +26,7 @@ var defaultMapping = map[string][]Label{
 // PR is the list of labels typically used on PRs. Use --
 var pullRequest = []Label{
 	{"1: PM Review", "Requires review by a product manager", "006b75"},
+	{"1: UX Review", "Requires review by a UX Designer", "7cdfe2"},
 	{"2: Dev Review", "Requires review by a core committer", "eb6420"},
 	{"2: QA Review", "Requires review by a QA tester", "7cdfe2"},
 	{"3: Reviews Complete", "All reviewers have approved the pull request", "0e8a16"},
