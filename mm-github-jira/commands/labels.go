@@ -32,6 +32,10 @@ func addLabels(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "could not read label flag")
 	}
 
+	if len(labels) == 0 {
+		return errors.New("at least one label should be applied")
+	}
+
 	client := gh.NewClient(GithubToken)
 	err = client.AddLabelsToIssues(gh.AddLabelsRequest{
 		Repository: repository,
