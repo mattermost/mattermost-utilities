@@ -21,6 +21,11 @@ func init() {
 	rootCmd.AddCommand(addLabelsCommand)
 }
 
+type AddLabelsRequest struct {
+	Repository string
+	Labels     []string
+}
+
 func addLabels(cmd *cobra.Command, args []string) error {
 	repository, err := cmd.Flags().GetString("repository")
 	if err != nil {
