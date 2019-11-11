@@ -14,9 +14,12 @@ var addLabelsCommand = &cobra.Command{
 }
 
 func init() {
+	addLabelsCommand.Flags().String("token", "", "Github token")
+	_ = addLabelsCommand.MarkFlagRequired("token")
 	addLabelsCommand.Flags().StringP("repository", "r", "", "github repository in format owner/repo (required)")
 	_ = addLabelsCommand.MarkFlagRequired("repository")
 	addLabelsCommand.Flags().StringArrayP("label", "l", nil, "label name to add to issue")
+	_ = addLabelsCommand.MarkFlagRequired("label")
 
 	rootCmd.AddCommand(addLabelsCommand)
 }
@@ -36,7 +39,12 @@ func addLabels(cmd *cobra.Command, args []string) error {
 		return errors.New("at least one label should be applied")
 	}
 
-	githubClient := service.NewGithubClient(GithubToken)
+	token, err := cmd.Flags().GetString("token")
+	if err != nil {
+		return errors.Wrap(err, "could not retrive github token")
+	}
+
+	githubClient := service.NewGithubClient(token)
 	err = githubClient.AddLabelsToIssues(&service.AddLabelsRequest{
 		Repository: repository,
 		Labels:     labels,
