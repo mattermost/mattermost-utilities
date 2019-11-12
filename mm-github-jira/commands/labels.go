@@ -14,11 +14,13 @@ var addLabelsCommand = &cobra.Command{
 }
 
 func init() {
-	addLabelsCommand.Flags().String("token", "", "Github token")
+	addLabelsCommand.Flags().String("token", "", "Github token (required)")
 	_ = addLabelsCommand.MarkFlagRequired("token")
+
 	addLabelsCommand.Flags().StringP("repository", "r", "", "github repository in format owner/repo (required)")
 	_ = addLabelsCommand.MarkFlagRequired("repository")
-	addLabelsCommand.Flags().StringArrayP("label", "l", nil, "label name to add to issue")
+
+	addLabelsCommand.Flags().StringArrayP("label", "l", nil, "label name to add to issue  (required)")
 	_ = addLabelsCommand.MarkFlagRequired("label")
 
 	rootCmd.AddCommand(addLabelsCommand)

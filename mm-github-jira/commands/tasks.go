@@ -6,22 +6,26 @@ import (
 )
 
 var createGithubIssuesCommand = &cobra.Command{
-	Use:   "labels",
-	Short: "Add labels to github issues",
+	Use:   "tasks",
+	Short: "Create Github issues from Jira tasks",
 	Args:  cobra.MinimumNArgs(1),
 	RunE:  createIssues,
 }
 
 func init() {
-	createGithubIssuesCommand.Flags().StringP("repository", "r", "", "github repository in format owner/repo (required)")
+	createGithubIssuesCommand.Flags().StringP("repository", "r", "", "Github repository in format owner/repo (required)")
 	_ = createGithubIssuesCommand.MarkFlagRequired("repository")
-	createGithubIssuesCommand.Flags().StringArrayP("label", "l", nil, "label name to add to issue")
+
+	createGithubIssuesCommand.Flags().StringArrayP("label", "l", nil, "label name to add to issue (required)")
 	_ = createGithubIssuesCommand.MarkFlagRequired("label")
-	createGithubIssuesCommand.Flags().String("github-token", "", "github token")
+
+	createGithubIssuesCommand.Flags().String("github-token", "", "github token (required)")
 	_ = createGithubIssuesCommand.MarkFlagRequired("github-token")
-	createGithubIssuesCommand.Flags().String("jira-username", "", "jira username")
+
+	createGithubIssuesCommand.Flags().String("jira-username", "", "jira username (required)")
 	_ = createGithubIssuesCommand.MarkFlagRequired("jira-username")
-	createGithubIssuesCommand.Flags().String("jira-token", "", "jira token")
+
+	createGithubIssuesCommand.Flags().String("jira-token", "", "jira token (required)")
 	_ = createGithubIssuesCommand.MarkFlagRequired("jira-token")
 
 	rootCmd.AddCommand(createGithubIssuesCommand)

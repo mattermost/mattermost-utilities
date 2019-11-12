@@ -9,7 +9,6 @@ var rootCmd = &cobra.Command{
 	Short: "Mattermost Github/Jira Tools",
 }
 
-func Run() {
-	// error ignored, cobra already prints the error
-	_ = rootCmd.Execute()
+func Run() error {
+	return rootCmd.Execute()
 }
