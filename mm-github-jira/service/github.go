@@ -34,14 +34,11 @@ func NewGithubClient(token string) *GithubClient {
 }
 
 func (gc *GithubClient) AddLabelsToIssues(req *AddLabelsRequest, issues ...string) error {
-	repository := strings.TrimSpace(req.Repository)
-	repoParts := strings.Split(repository, "/")
-
-	if len(repoParts) != 2 {
-		return errors.New("invalid repository name")
+	owner, repo, err := parseRepository(req.Repository)
+	if err != nil {
+		return err
 	}
 
-	owner, repo := repoParts[0], repoParts[1]
 	ctx := context.Background()
 	for _, issueStr := range issues {
 		issueNumber, err := strconv.Atoi(issueStr)
@@ -66,6 +63,22 @@ func (gc *GithubClient) AddLabelsToIssues(req *AddLabelsRequest, issues ...strin
 	return nil
 }
 
-func (gc *GithubClient) CreateIssues(req *CreateIssuesRequest, issues []jira.Issue) {
+func (gc *GithubClient) CreateIssues(req *CreateIssuesRequest, issues []jira.Issue) error {
+	owner, repo, err := parseRepository(req.Repository)
+	if err != nil {
+		return err
+	}
 
+	return nil
+}
+
+func parseRepository(repository string) (string, string, error) {
+	repository = strings.TrimSpace(repository)
+	repoParts := strings.Split(repository, "/")
+
+	if len(repoParts) != 2 {
+		return "", "", errors.New("invalid repository name")
+	}
+
+	return repoParts[0], repoParts[1], nil
 }

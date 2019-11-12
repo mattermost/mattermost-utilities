@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"github.com/mattermost/mattermost-utilities/mm-github-jira/service"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -32,7 +33,27 @@ func init() {
 }
 
 func createIssues(cmd *cobra.Command, args []string) error {
-	_, err := cmd.Flags().GetString("repository")
+	jiraToken, err := cmd.Flags().GetString("jira-token")
+	if err != nil {
+		return errors.Wrap(err, "could not read jira-token flag")
+	}
+
+	jiraUsername, err := cmd.Flags().GetString("jira-username")
+	if err != nil {
+		return errors.Wrap(err, "could not read jira-username flag")
+	}
+
+	jiraClient, err := service.NewJiraClient(jiraUsername, jiraToken)
+	if err != nil {
+		return errors.Wrap(err, "could not create jira client")
+	}
+
+	issues, err := jiraClient.FindTasks(args...)
+	if err != nil {
+		return errors.Wrap(err, "could not retrieve tasks from jira")
+	}
+
+	repository, err := cmd.Flags().GetString("repository")
 	if err != nil {
 		return errors.Wrap(err, "could not read repository flag")
 	}
@@ -45,5 +66,6 @@ func createIssues(cmd *cobra.Command, args []string) error {
 	if len(labels) == 0 {
 		return errors.New("at least one label should be applied")
 	}
+
 	return nil
 }
