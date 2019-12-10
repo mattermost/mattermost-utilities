@@ -16,6 +16,7 @@ const translatableComponents = {
     FormattedMarkdownText: [{id: 'id', default: 'defaultMessage'}],
     FormattedAdminHeader: [{id: 'id', default: 'defaultMessage'}],
     LocalizedInput: ['placeholder'],
+    LocalizedIcon: ['title'],
 };
 
 export function extractFromDirectory(dirPaths, filters = []) {
