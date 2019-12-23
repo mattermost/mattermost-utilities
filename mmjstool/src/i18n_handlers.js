@@ -1,6 +1,8 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
+/* eslint-disable no-console,no-process-exit */
+
 const fs = require('fs');
 const path = require('path');
 
@@ -16,59 +18,21 @@ function difference(setA, setB) {
     return differenceSet;
 }
 
-function getCurrentTranslations(webappDir, mobileDir) {
+function getCurrentTranslationsWebapp(webappDir) {
     const currentWebappTranslationsJson = fs.readFileSync(path.join(webappDir, 'i18n', 'en.json'));
-    const currentWebappTranslations = JSON.parse(currentWebappTranslationsJson);
-
-    const currentMobileTranslationsJson = fs.readFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', 'en.json'));
-    const currentMobileTranslations = JSON.parse(currentMobileTranslationsJson);
-
-    return {
-        webapp: currentWebappTranslations,
-        mobile: currentMobileTranslations,
-    };
+    return JSON.parse(currentWebappTranslationsJson);
 }
 
-export function i18nCheck(argv) {
-    const webappDir = argv['webapp-dir'];
-    const mobileDir = argv['mobile-dir'];
-
-    const currentTranslations = getCurrentTranslations(webappDir, mobileDir);
-    const currentWebappKeys = new Set(Object.keys(currentTranslations.webapp));
-    const currentMobileKeys = new Set(Object.keys(currentTranslations.mobile));
-
-    const promise1 = i18nExtractLib.extractFromDirectory([argv['webapp-dir']], ['dist', 'node_modules', 'non_npm_dependencies', 'tests', 'components/gif_picker/static/gif.worker.js']);
-    const promise2 = i18nExtractLib.extractFromDirectory([argv['mobile-dir'] + '/app', argv['mobile-dir'] + '/share_extension'], []);
-    Promise.all([promise1, promise2]).then(([translationsWebapp, translationsMobile]) => {
-        const webappKeys = new Set(Object.keys(translationsWebapp));
-        const mobileKeys = new Set(Object.keys(translationsMobile));
-
-        for (const key of difference(currentWebappKeys, webappKeys)) {
-            // eslint-disable-next-line no-console
-            console.log('Removed from webapp:', key);
-        }
-        for (const key of difference(webappKeys, currentWebappKeys)) {
-            // eslint-disable-next-line no-console
-            console.log('Added to webapp:', key);
-        }
-
-        for (const key of difference(currentMobileKeys, mobileKeys)) {
-            // eslint-disable-next-line no-console
-            console.log('Removed from mobile:', key);
-        }
-        for (const key of difference(mobileKeys, currentMobileKeys)) {
-            // eslint-disable-next-line no-console
-            console.log('Added to mobile:', key);
-        }
-    });
+function getCurrentTranslationsMobile(mobileDir) {
+    const currentMobileTranslationsJson = fs.readFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', 'en.json'));
+    return JSON.parse(currentMobileTranslationsJson);
 }
 
 export function i18nCheckWebapp(argv) {
     const webappDir = argv['webapp-dir'];
-    const mobileDir = argv['mobile-dir'];
 
-    const currentTranslations = getCurrentTranslations(webappDir, mobileDir);
-    const currentWebappKeys = new Set(Object.keys(currentTranslations.webapp));
+    const currentTranslations = getCurrentTranslationsWebapp(webappDir);
+    const currentWebappKeys = new Set(Object.keys(currentTranslations));
 
     i18nExtractLib.extractFromDirectory([argv['webapp-dir']], ['dist', 'node_modules', 'non_npm_dependencies', 'tests', 'components/gif_picker/static/gif.worker.js']).then((translationsWebapp) => {
         const webappKeys = new Set(Object.keys(translationsWebapp));
@@ -91,12 +55,16 @@ export function i18nCheckWebapp(argv) {
     });
 }
 
+export function i18nCheck(argv) {
+    i18nCheckWebapp(argv);
+    i18nCheckMobile(argv);
+}
+
 export function i18nCheckMobile(argv) {
-    const webappDir = argv['webapp-dir'];
     const mobileDir = argv['mobile-dir'];
 
-    const currentTranslations = getCurrentTranslations(webappDir, mobileDir);
-    const currentMobileKeys = new Set(Object.keys(currentTranslations.mobile));
+    const currentTranslations = getCurrentTranslationsMobile(mobileDir);
+    const currentMobileKeys = new Set(Object.keys(currentTranslations));
 
     i18nExtractLib.extractFromDirectory([argv['mobile-dir'] + '/app', argv['mobile-dir'] + '/share_extension'], []).then((translationsMobile) => {
         const mobileKeys = new Set(Object.keys(translationsMobile));
@@ -122,46 +90,44 @@ export function i18nCheckMobile(argv) {
 
 export function i18nExtractWebapp(argv) {
     const webappDir = argv['webapp-dir'];
-    const mobileDir = argv['mobile-dir'];
 
-    const currentTranslations = getCurrentTranslations(webappDir, mobileDir);
-    const currentWebappKeys = new Set(Object.keys(currentTranslations.webapp));
+    const currentTranslations = getCurrentTranslationsWebapp(webappDir);
+    const currentWebappKeys = new Set(Object.keys(currentTranslations));
 
     i18nExtractLib.extractFromDirectory([argv['webapp-dir']], ['dist', 'node_modules', 'non_npm_dependencies', 'tests', 'components/gif_picker/static/gif.worker.js']).then((translationsWebapp) => {
         const webappKeys = new Set(Object.keys(translationsWebapp));
 
         for (const key of difference(currentWebappKeys, webappKeys)) {
-            delete currentTranslations.webapp[key];
+            delete currentTranslations[key];
         }
         for (const key of difference(webappKeys, currentWebappKeys)) {
-            currentTranslations.webapp[key] = translationsWebapp[key];
+            currentTranslations[key] = translationsWebapp[key];
         }
 
         const options = {ignoreCase: true, reverse: false, depth: 1};
-        const sortedWebappTranslations = sortJson(currentTranslations.webapp, options);
+        const sortedWebappTranslations = sortJson(currentTranslations, options);
         fs.writeFileSync(path.join(webappDir, 'i18n', 'en.json'), JSON.stringify(sortedWebappTranslations, null, 2) + '\n');
     });
 }
 
 export function i18nExtractMobile(argv) {
-    const webappDir = argv['webapp-dir'];
     const mobileDir = argv['mobile-dir'];
 
-    const currentTranslations = getCurrentTranslations(webappDir, mobileDir);
-    const currentMobileKeys = new Set(Object.keys(currentTranslations.mobile));
+    const currentTranslations = getCurrentTranslationsMobile(mobileDir);
+    const currentMobileKeys = new Set(Object.keys(currentTranslations));
 
     i18nExtractLib.extractFromDirectory([argv['mobile-dir'] + '/app', argv['mobile-dir'] + '/share_extension'], []).then((translationsMobile) => {
         const mobileKeys = new Set(Object.keys(translationsMobile));
 
         for (const key of difference(currentMobileKeys, mobileKeys)) {
-            delete currentTranslations.mobile[key];
+            delete currentTranslations[key];
         }
         for (const key of difference(mobileKeys, currentMobileKeys)) {
-            currentTranslations.mobile[key] = translationsMobile[key];
+            currentTranslations[key] = translationsMobile[key];
         }
 
         const options = {ignoreCase: true, reverse: false, depth: 1};
-        const sortedMobileTranslations = sortJson(currentTranslations.mobile, options);
+        const sortedMobileTranslations = sortJson(currentTranslations, options);
         fs.writeFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', 'en.json'), JSON.stringify(sortedMobileTranslations, null, 2) + '\n');
     });
 }
