@@ -17,6 +17,7 @@ var defaultMapping = map[string][]Label{
 	"mattermost-plugin-jenkins":           pluginLabels,
 	"mattermost-plugin-jira":              pluginLabels,
 	"mattermost-plugin-msoffice":          pluginLabels,
+	"mattermost-plugin-solar-lottery":     pluginLabels,
 	"mattermost-plugin-suggestions":       pluginLabels,
 	"mattermost-plugin-todo":              pluginLabels,
 	"mattermost-plugin-webex":             pluginLabels,
