@@ -32,6 +32,7 @@ var pullRequest = []Label{
 	{"2: Dev Review", "Requires review by a core committer", "eb6420"},
 	{"2: QA Review", "Requires review by a QA tester", "7cdfe2"},
 	{"3: Reviews Complete", "All reviewers have approved the pull request", "0e8a16"},
+	{"AutoMerge", "Used by Mattermod to merge PR automatically", "b74533"},
 	{"Awaiting Submitter Action", "Blocked on the author", "b60205"},
 	{"Do Not Merge/Awaiting PR", "Awaiting another pull request before merging (e.g. server changes)", "a32735"},
 	{"Do Not Merge", "Should not be merged until this label is removed", "a32735"},
