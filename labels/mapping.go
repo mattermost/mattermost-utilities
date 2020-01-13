@@ -9,6 +9,7 @@ var defaultMapping = map[string][]Label{
 	"mattermost-plugin-antivirus":         pluginLabels,
 	"mattermost-plugin-autolink":          pluginLabels,
 	"mattermost-plugin-aws-SNS":           pluginLabels,
+	"mattermost-plugin-community":         pluginLabels,
 	"mattermost-plugin-custom-attributes": pluginLabels,
 	"mattermost-plugin-email-reply":       pluginLabels,
 	"mattermost-plugin-giphy":             pluginLabels,
