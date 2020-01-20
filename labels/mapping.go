@@ -6,6 +6,7 @@ var pluginLabels = MergeLabels(coreLabels, issue, helpWanted, docs, plugin)
 
 var defaultMapping = map[string][]Label{
 	"mattermost-oembed-plugin":            pluginLabels,
+	"mattermost-plugin-agenda":            pluginLabels,
 	"mattermost-plugin-antivirus":         pluginLabels,
 	"mattermost-plugin-autolink":          pluginLabels,
 	"mattermost-plugin-aws-SNS":           pluginLabels,
