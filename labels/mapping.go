@@ -67,6 +67,7 @@ var helpWanted = []Label{
 	{"Good First Issue", "Suitable for first-time contributors", "7057ff"},
 	{"Hacktoberfest", "", "dc7d02"},
 	{"Help Wanted", "Community help wanted", "33aa3f"},
+	{"Help Wanted Candidate", "Needs further specification to be a good help wanted ticket", "88acea"},
 	{"Tech/Go", "", "0e8a16"},
 	{"Tech/JavaScript", "", "f9d0c4"},
 	{"Tech/ReactJS", "", "1d76db"},
