@@ -54,6 +54,8 @@ var pullRequest = []Label{
 	{"Do Not Merge", "Should not be merged until this label is removed", "a32735"},
 	{"Lifecycle/frozen", "", "d3e2f0"},
 	{"Lifecycle/1:stale", "", "5319e7"},
+	{"Lifecycle/2:inactive", "", "a34523"},
+	{"Lifecycle/3:orphaned", "", "111111"},
 	{"Work In Progress", "Not yet ready for review", "e11d21"},
 }
 
