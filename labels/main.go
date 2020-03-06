@@ -105,9 +105,7 @@ func createOrUpdateLabels(client *github.Client, repo string, labels []Label) {
 
 		for _, remoteLabel := range remoteLabels {
 			if strings.EqualFold(remoteLabel.GetName(), label.Name) {
-				if remoteLabel.GetName() != label.Name ||
-					remoteLabel.GetDescription() != label.Description ||
-					remoteLabel.GetColor() != label.Color {
+				if !label.Equal(remoteLabel) {
 					_, _, err = client.Issues.EditLabel(context.Background(), org, repo, label.Name, label.ToGithubLabel())
 					if err != nil {
 						logger.WithError(err).Error("Failed to edit label")
@@ -132,6 +130,21 @@ func createOrUpdateLabels(client *github.Client, repo string, labels []Label) {
 
 			logger.Info("Created label")
 		}
+	}
+
+	for _, remoteLabel := range remoteLabels {
+		found := false
+		for _, label := range labels {
+			if label.Equal(remoteLabel) {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			log.WithFields(log.Fields{"label": remoteLabel.GetName(), "repo": repo}).Warn("found untracked label")
+		}
+
 	}
 }
 

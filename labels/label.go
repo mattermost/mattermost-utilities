@@ -20,6 +20,13 @@ func (l Label) ToGithubLabel() *github.Label {
 	}
 }
 
+// Equal compare to a github library compatible type
+func (l Label) Equal(gh *github.Label) bool {
+	return gh.GetName() == l.Name &&
+		gh.GetDescription() == l.Description &&
+		gh.GetColor() == l.Color
+}
+
 // MergeLabels return the union of two slices of labels
 func MergeLabels(l1 []Label, l2 ...[]Label) []Label {
 	for _, l := range l2 {
