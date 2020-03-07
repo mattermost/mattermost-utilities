@@ -45,12 +45,13 @@ var pullRequest = []Label{
 }
 
 var issue = []Label{
-	{"Bug", "Something isn't working", "d73a4a"},
 	{"Duplicate", "This issue or pull request already exists", "cfd3d7"},
-	{"Enhancement", "New feature or request", "a2eeef"},
 	{"Invalid", "This doesn't seem right", "e4e669"},
-	{"Question", "Further information is requested", "d876e3"},
 	{"Triage", "", "efcb6e"},
+	{"Type/Bug", "Something isn't working", "d73a4a"},
+	{"Type/Enhancement", "New feature or improvement of existing feature", "a2eeef"},
+	{"Type/Task", "A general task", "6698d1"},
+	{"Type/Question", "Further information is requested", "d876e3"},
 	{"Wontfix", "This will not be worked on", "ffffff"},
 }
 
@@ -87,4 +88,10 @@ var changelog = []Label{
 var tests = []Label{
 	{"Tests/Done", "Required tests have been written", "0e8a16"},
 	{"Tests/Not Needed", "Does not require tests", "d4c5f9"},
+}
+
+var migrateMap = map[string]string{
+	"Bug":         "Type/Bug",
+	"Enhancement": "Type/Enhancement",
+	"Question":    "Type/Question",
 }

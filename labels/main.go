@@ -19,6 +19,7 @@ var useDefault bool
 var useRepo string
 var useCoreLabels bool
 var usePluginLabels bool
+var migrate bool
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
@@ -27,6 +28,7 @@ func init() {
 	rootCmd.Flags().StringVar(&useRepo, "repo", "", "Github Mattermost repository name.")
 	rootCmd.Flags().BoolVar(&useCoreLabels, "core-labels", false, "Use a core set of Mattermost labels.")
 	rootCmd.Flags().BoolVar(&usePluginLabels, "plugin-labels", false, "Use Mattermost plugin-specific labels.")
+	rootCmd.Flags().BoolVar(&migrate, "migrate", false, "Migrate to existing label to new naming pattern.")
 }
 
 func main() {
@@ -71,13 +73,29 @@ var rootCmd = &cobra.Command{
 			log.Fatalf("You need to specify the repo to apply labels to, e.g. --repo=mattermost-test, or run the default settings with --default")
 		}
 
-		log.Info("Starting syncing labels")
-
 		ts := oauth2.StaticTokenSource(
 			&oauth2.Token{AccessToken: token},
 		)
 		tc := oauth2.NewClient(context.Background(), ts)
 		client := github.NewClient(tc)
+
+		if migrate {
+			log.Info("Start to migrate sync labels")
+
+			var wg sync.WaitGroup
+			for repo := range mapping {
+				wg.Add(1)
+				go func(repo string) {
+					migrateLabels(client, repo)
+					wg.Done()
+				}(repo)
+			}
+
+			wg.Wait()
+			log.Info("Finished migrating labels")
+		}
+
+		log.Info("Starting to sync labels")
 
 		var wg sync.WaitGroup
 		for repo, labels := range mapping {
@@ -91,6 +109,30 @@ var rootCmd = &cobra.Command{
 		wg.Wait()
 		log.WithFields(log.Fields{"number of repos": len(mapping)}).Info("Finished syncing labels")
 	},
+}
+
+func migrateLabels(client *github.Client, repo string) {
+	remoteLabels, err := fetchLabels(client, repo)
+	if err != nil {
+		log.WithField("repo", repo).WithError(err).Error("Failed to fetch labels")
+	}
+
+	for old, new := range migrateMap {
+		for _, remoteLabel := range remoteLabels {
+			if strings.EqualFold(remoteLabel.GetName(), old) {
+				logger := log.WithFields(log.Fields{"repo": repo, "old": old, "new": new})
+
+				newLabel := &github.Label{Name: &new}
+				_, _, err = client.Issues.EditLabel(context.Background(), org, repo, old, newLabel)
+				if err != nil {
+					logger.WithError(err).Error("Failed to edit label")
+					continue
+				}
+
+				logger.Info("Migrated label")
+			}
+		}
+	}
 }
 
 func createOrUpdateLabels(client *github.Client, repo string, labels []Label) {
@@ -144,7 +186,6 @@ func createOrUpdateLabels(client *github.Client, repo string, labels []Label) {
 		if !found {
 			log.WithFields(log.Fields{"label": remoteLabel.GetName(), "repo": repo}).Warn("found untracked label")
 		}
-
 	}
 }
 
