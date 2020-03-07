@@ -56,6 +56,7 @@ var pullRequest = []Label{
 	{"Lifecycle/1:stale", "", "5319e7"},
 	{"Lifecycle/2:inactive", "", "a34523"},
 	{"Lifecycle/3:orphaned", "", "111111"},
+	{"QA Review Done", "PR has been approved by QA", "0e8a16"},
 	{"Work In Progress", "Not yet ready for review", "e11d21"},
 }
 
