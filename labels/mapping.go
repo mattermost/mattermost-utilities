@@ -2,16 +2,17 @@ package main
 
 var defaultLabels = coreLabels
 var coreLabels = MergeLabels(pullRequest)
-var pluginLabels = MergeLabels(coreLabels, issue, helpWanted, docs, plugin)
+var pluginLabelsWithoutHW = MergeLabels(coreLabels, issue, docs, plugin)
+var pluginLabels = MergeLabels(pluginLabelsWithoutHW, helpWanted)
 
 var defaultMapping = map[string][]Label{
 	"mattermost-oembed-plugin":            pluginLabels,
 	"mattermost-plugin-agenda":            pluginLabels,
 	"mattermost-plugin-antivirus":         pluginLabels,
 	"mattermost-plugin-autolink":          pluginLabels,
-	"mattermost-plugin-autotranslate":     coreLabels,
+	"mattermost-plugin-autotranslate":     pluginLabels,
 	"mattermost-plugin-aws-SNS":           pluginLabels,
-	"mattermost-plugin-channel-export":    coreLabels,
+	"mattermost-plugin-channel-export":    pluginLabelsWithoutHW,
 	"mattermost-plugin-community":         pluginLabels,
 	"mattermost-plugin-demo":              coreLabels,
 	"mattermost-plugin-custom-attributes": pluginLabels,
@@ -20,24 +21,24 @@ var defaultMapping = map[string][]Label{
 	"mattermost-plugin-github":            pluginLabels,
 	"mattermost-plugin-gitlab":            pluginLabels,
 	"mattermost-plugin-google-calendar":   pluginLabels,
-	"mattermost-plugin-incident-response": MergeLabels(coreLabels, issue, docs, plugin),
+	"mattermost-plugin-incident-response": pluginLabelsWithoutHW,
 	"mattermost-plugin-jenkins":           pluginLabels,
 	"mattermost-plugin-jira":              pluginLabels,
 	"mattermost-plugin-memes":             pluginLabels,
 	"mattermost-plugin-mscalendar":        pluginLabels,
 	"mattermost-plugin-msoffice":          pluginLabels,
-	"mattermost-plugin-nop":               coreLabels,
-	"mattermost-plugin-nps":               coreLabels,
-	"mattermost-plugin-profanity-filter":  coreLabels,
+	"mattermost-plugin-nop":               pluginLabels,
+	"mattermost-plugin-nps":               pluginLabels,
+	"mattermost-plugin-profanity-filter":  pluginLabels,
 	"mattermost-plugin-skype4business":    pluginLabels,
 	"mattermost-plugin-solar-lottery":     pluginLabels,
-	"mattermost-plugin-starter-template":  coreLabels,
+	"mattermost-plugin-starter-template":  pluginLabels,
 	"mattermost-plugin-suggestions":       pluginLabels,
 	"mattermost-plugin-todo":              pluginLabels,
 	"mattermost-plugin-webex":             pluginLabels,
 	"mattermost-plugin-welcomebot":        pluginLabels,
-	"mattermost-plugin-workflow":          MergeLabels(coreLabels, issue, docs, plugin),
-	"mattermost-plugin-workflow-client":   coreLabels,
+	"mattermost-plugin-workflow":          pluginLabelsWithoutHW,
+	"mattermost-plugin-workflow-client":   pluginLabelsWithoutHW,
 	"mattermost-plugin-zoom":              pluginLabels,
 }
 
