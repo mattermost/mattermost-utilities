@@ -87,8 +87,8 @@ var helpWanted = []Label{
 	{"Help Wanted", "Community help wanted", "33aa3f"},
 	{"Needs Spec", "Needs further specification to be a good (help wanted) ticket", "e25de0"},
 	{"Tech/Go", "", "0e8a16"},
-	{"Tech/JavaScript", "", "f9d0c4"},
 	{"Tech/ReactJS", "", "1d76db"},
+	{"Tech/TypeScript", "", "c9ffff"},
 	{"Up For Grabs", "Ready for help from the community. Removed when someone volunteers", "8B4500"},
 }
 
@@ -109,7 +109,8 @@ var tests = []Label{
 }
 
 var migrateMap = map[string]string{
-	"Bug":         "Type/Bug",
-	"Enhancement": "Type/Enhancement",
-	"Question":    "Type/Question",
+	"Bug":             "Type/Bug",
+	"Enhancement":     "Type/Enhancement",
+	"Question":        "Type/Question",
+	"Tech/JavaScript": "",
 }
