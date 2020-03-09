@@ -26,7 +26,6 @@ var defaultMapping = map[string][]Label{
 	"mattermost-plugin-jira":              pluginLabels,
 	"mattermost-plugin-memes":             pluginLabels,
 	"mattermost-plugin-mscalendar":        pluginLabels,
-	"mattermost-plugin-msoffice":          pluginLabels,
 	"mattermost-plugin-nop":               pluginLabels,
 	"mattermost-plugin-nps":               pluginLabels,
 	"mattermost-plugin-profanity-filter":  pluginLabels,
