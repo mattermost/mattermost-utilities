@@ -177,14 +177,14 @@ func createOrUpdateLabels(client *github.Client, repo string, labels []Label) {
 	for _, remoteLabel := range remoteLabels {
 		found := false
 		for _, label := range labels {
-			if label.Equal(remoteLabel) {
+			if strings.EqualFold(remoteLabel.GetName(), label.Name) {
 				found = true
 				break
 			}
 		}
 
 		if !found {
-			log.WithFields(log.Fields{"label": remoteLabel.GetName(), "repo": repo}).Warn("found untracked label")
+			log.WithFields(log.Fields{"label": remoteLabel.GetName(), "repo": repo}).Warn("Found untracked label")
 		}
 	}
 }
