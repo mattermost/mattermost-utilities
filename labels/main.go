@@ -92,22 +92,22 @@ var rootCmd = &cobra.Command{
 			}
 
 			wg.Wait()
-			log.Info("Finished migrating labels")
+			log.WithFields(log.Fields{"number of repos": len(mapping)}).Info("Finished migrating labels")
+		} else {
+			log.Info("Starting to sync labels")
+
+			var wg sync.WaitGroup
+			for repo, labels := range mapping {
+				wg.Add(1)
+				go func(repo string, labels []Label) {
+					createOrUpdateLabels(client, repo, labels)
+					wg.Done()
+				}(repo, labels)
+			}
+
+			wg.Wait()
+			log.WithFields(log.Fields{"number of repos": len(mapping)}).Info("Finished syncing labels")
 		}
-
-		log.Info("Starting to sync labels")
-
-		var wg sync.WaitGroup
-		for repo, labels := range mapping {
-			wg.Add(1)
-			go func(repo string, labels []Label) {
-				createOrUpdateLabels(client, repo, labels)
-				wg.Done()
-			}(repo, labels)
-		}
-
-		wg.Wait()
-		log.WithFields(log.Fields{"number of repos": len(mapping)}).Info("Finished syncing labels")
 	},
 }
 
