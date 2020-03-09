@@ -37,7 +37,7 @@ var defaultMapping = map[string][]Label{
 	"mattermost-plugin-webex":             pluginLabels,
 	"mattermost-plugin-welcomebot":        pluginLabels,
 	"mattermost-plugin-workflow":          pluginLabelsWithoutHW,
-	"mattermost-plugin-workflow-client":   pluginLabelsWithoutHW,
+	"mattermost-plugin-workflow-client":   pluginLabels,
 	"mattermost-plugin-zoom":              pluginLabels,
 }
 
