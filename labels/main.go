@@ -120,16 +120,28 @@ func migrateLabels(client *github.Client, repo string) {
 	for old, new := range migrateMap {
 		for _, remoteLabel := range remoteLabels {
 			if strings.EqualFold(remoteLabel.GetName(), old) {
-				logger := log.WithFields(log.Fields{"repo": repo, "old": old, "new": new})
+				if new == "" {
+					logger := log.WithFields(log.Fields{"repo": repo, "old": old})
 
-				newLabel := &github.Label{Name: &new}
-				_, _, err = client.Issues.EditLabel(context.Background(), org, repo, old, newLabel)
-				if err != nil {
-					logger.WithError(err).Error("Failed to edit label")
-					continue
+					_, err = client.Issues.DeleteLabel(context.Background(), org, repo, old)
+					if err != nil {
+						logger.WithError(err).Error("Failed to delete label")
+						continue
+					}
+
+					logger.Info("Deleted unneeded label")
+				} else {
+					logger := log.WithFields(log.Fields{"repo": repo, "old": old, "new": new})
+
+					newLabel := &github.Label{Name: &new}
+					_, _, err = client.Issues.EditLabel(context.Background(), org, repo, old, newLabel)
+					if err != nil {
+						logger.WithError(err).Error("Failed to edit label")
+						continue
+					}
+
+					logger.Info("Migrated label")
 				}
-
-				logger.Info("Migrated label")
 			}
 		}
 	}
