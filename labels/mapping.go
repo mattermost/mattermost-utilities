@@ -6,7 +6,6 @@ var pluginLabelsWithoutHW = MergeLabels(coreLabels, issue, docs, plugin)
 var pluginLabels = MergeLabels(pluginLabelsWithoutHW, helpWanted)
 
 var defaultMapping = map[string][]Label{
-	"mattermost-oembed-plugin":            pluginLabels,
 	"mattermost-plugin-agenda":            pluginLabels,
 	"mattermost-plugin-antivirus":         pluginLabels,
 	"mattermost-plugin-autolink":          pluginLabels,
@@ -28,6 +27,7 @@ var defaultMapping = map[string][]Label{
 	"mattermost-plugin-mscalendar":        pluginLabels,
 	"mattermost-plugin-nop":               pluginLabels,
 	"mattermost-plugin-nps":               pluginLabels,
+	"mattermost-plugin-oembed":            pluginLabels,
 	"mattermost-plugin-profanity-filter":  pluginLabels,
 	"mattermost-plugin-skype4business":    pluginLabels,
 	"mattermost-plugin-solar-lottery":     pluginLabels,
