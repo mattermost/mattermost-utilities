@@ -53,8 +53,8 @@ var pullRequest = []Label{
 	{"1: PM Review", "Requires review by a product manager", "006b75"},
 	{"1: UX Review", "Requires review by a UX Designer", "7cdfe2"},
 	{"2: Dev Review", "Requires review by a core committer", "eb6420"},
-	{"2: QA Review", "Requires review by a QA tester", "7cdfe2"},
-	{"3: Reviews Complete", "All reviewers have approved the pull request", "0e8a16"},
+	{"3: QA Review", "Requires review by a QA tester", "7cdfe2"},
+	{"4: Reviews Complete", "All reviewers have approved the pull request", "0e8a16"},
 	{"AutoMerge", "Used by Mattermod to merge PR automatically", "b74533"},
 	{"Awaiting Submitter Action", "Blocked on the author", "b60205"},
 	{"Do Not Merge/Awaiting PR", "Awaiting another pull request before merging (e.g. server changes)", "a32735"},
@@ -114,4 +114,7 @@ var migrateMap = map[string]string{
 	"Enhancement":     "Type/Enhancement",
 	"Question":        "Type/Question",
 	"Tech/JavaScript": "",
+	// Migrate QA labels: https://community.mattermost.com/core/pl/eegcso8xr3bqzr7giftc3dgdka
+	"2: QA Review":        "3: QA Review",
+	"3: Reviews Complete": "4: Reviews Complete",
 }
