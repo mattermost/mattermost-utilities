@@ -22,7 +22,6 @@ var defaultMapping = map[string][]Label{
 	"mattermost-plugin-demo-creator":      pluginLabels,
 	"mattermost-plugin-digitalocean":      coreLabels,
 	"mattermost-plugin-email-reply":       pluginLabels,
-	"mattermost-plugin-giphy":             pluginLabels,
 	"mattermost-plugin-github":            pluginLabels,
 	"mattermost-plugin-gitlab":            pluginLabels,
 	"mattermost-plugin-google-calendar":   pluginLabels,
