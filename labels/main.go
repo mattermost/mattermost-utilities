@@ -56,19 +56,23 @@ var rootCmd = &cobra.Command{
 			mapping = defaultMapping
 
 		case useRepo != "":
-			labels := defaultLabels
-			switch {
-			case usePluginLabels:
-				labels = pluginLabels
-			case useCoreLabels:
-				labels = coreLabels
-			default:
-				log.Fatalf("You need to specify labels to set on %q, e.g. --core-labels or --plugin-labels", useRepo)
+			var labels []Label
+			if migrate {
+				labels = []Label{}
+			} else {
+				labels = defaultLabels
+				switch {
+				case usePluginLabels:
+					labels = pluginLabels
+				case useCoreLabels:
+					labels = coreLabels
+				default:
+					log.Fatalf("You need to specify labels to set on %q, e.g. --core-labels or --plugin-labels", useRepo)
+				}
 			}
 			mapping = map[string][]Label{
 				useRepo: labels,
 			}
-
 		default:
 			log.Fatalf("You need to specify the repo to apply labels to, e.g. --repo=mattermost-test, or run the default settings with --default")
 		}
@@ -80,7 +84,7 @@ var rootCmd = &cobra.Command{
 		client := github.NewClient(tc)
 
 		if migrate {
-			log.Info("Start to migrate sync labels")
+			log.Info("Start to migrate labels")
 
 			var wg sync.WaitGroup
 			for repo := range mapping {
