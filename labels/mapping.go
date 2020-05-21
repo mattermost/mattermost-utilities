@@ -30,6 +30,7 @@ var defaultMapping = map[string][]Label{
 	"mattermost-plugin-incident-response": pluginLabelsWithoutHW,
 	"mattermost-plugin-jenkins":           pluginLabels,
 	"mattermost-plugin-jira":              pluginLabels,
+	"mattermost-plugin-jitsi":             pluginLabels,
 	"mattermost-plugin-memes":             pluginLabels,
 	"mattermost-plugin-mscalendar":        pluginLabels,
 	"mattermost-plugin-nop":               pluginLabels,
