@@ -55,7 +55,6 @@ func init() {
 
 	CheckCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	CheckCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
-	CheckCmd.Flags().Bool("contributor", false, "Extract translations only for Mattermost open source code")
 
 	I18nCmd.AddCommand(
 		ExtractCmd,
