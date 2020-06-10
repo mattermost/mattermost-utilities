@@ -51,7 +51,7 @@ var CheckCmd = &cobra.Command{
 func init() {
 	ExtractCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	ExtractCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
-	ExtractCmd.Flags().Bool("contributor", false, "Extract translations only for Mattermost open source code")
+	ExtractCmd.Flags().Bool("contributor", false, "Allows contributors safely extract translations from source code without removing enterprise messages keys")
 
 	CheckCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	CheckCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
