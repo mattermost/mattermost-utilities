@@ -47,8 +47,10 @@ var CheckCmd = &cobra.Command{
 }
 
 func init() {
+	ExtractCmd.Flags().Bool("skip-dynamic", false, "Whether to skip dynamically added translations")
 	ExtractCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	ExtractCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
+	CheckCmd.Flags().Bool("skip-dynamic", false, "Whether to skip dynamically added translations")
 	CheckCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	CheckCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
 	I18nCmd.AddCommand(
@@ -64,7 +66,7 @@ func getCurrentTranslations(mattermostDir string) ([]Translation, error) {
 		return nil, err
 	}
 	var translations []Translation
-	json.Unmarshal(jsonFile, &translations)
+	_ = json.Unmarshal(jsonFile, &translations)
 	return translations, nil
 }
 
@@ -76,12 +78,16 @@ func extractStrings(enterpriseDir, mattermostDir string) map[string]bool {
 		}
 		return extractFromPath(p, info, err, &i18nStrings)
 	}
-	filepath.Walk(mattermostDir, walkFunc)
-	filepath.Walk(enterpriseDir, walkFunc)
+	_ = filepath.Walk(mattermostDir, walkFunc)
+	_ = filepath.Walk(enterpriseDir, walkFunc)
 	return i18nStrings
 }
 
 func extractCmdF(command *cobra.Command, args []string) error {
+	skipDynamic, err := command.Flags().GetBool("skip-dynamic")
+	if err != nil {
+		return errors.New("Invalid skip-dynamic parameter")
+	}
 	enterpriseDir, err := command.Flags().GetString("enterprise-dir")
 	if err != nil {
 		return errors.New("Invalid enterprise-dir parameter")
@@ -92,8 +98,9 @@ func extractCmdF(command *cobra.Command, args []string) error {
 	}
 
 	i18nStrings := extractStrings(enterpriseDir, mattermostDir)
-	addDynamicallyGeneratedStrings(&i18nStrings)
-
+	if !skipDynamic {
+		addDynamicallyGeneratedStrings(&i18nStrings)
+	}
 	i18nStringsList := []string{}
 	for id := range i18nStrings {
 		i18nStringsList = append(i18nStringsList, id)
@@ -134,6 +141,9 @@ func extractCmdF(command *cobra.Command, args []string) error {
 	sort.Slice(result, func(i, j int) bool { return result[i].Id < result[j].Id })
 
 	f, err := os.Create(path.Join(mattermostDir, "i18n", "en.json"))
+	if err != nil {
+		return err
+	}
 	defer f.Close()
 
 	encoder := json.NewEncoder(f)
@@ -148,6 +158,10 @@ func extractCmdF(command *cobra.Command, args []string) error {
 }
 
 func checkCmdF(command *cobra.Command, args []string) error {
+	skipDynamic, err := command.Flags().GetBool("skip-dynamic")
+	if err != nil {
+		return errors.New("Invalid skip-dynamic parameter")
+	}
 	enterpriseDir, err := command.Flags().GetString("enterprise-dir")
 	if err != nil {
 		return errors.New("Invalid enterprise-dir parameter")
@@ -158,8 +172,9 @@ func checkCmdF(command *cobra.Command, args []string) error {
 	}
 
 	i18nStrings := extractStrings(enterpriseDir, mattermostDir)
-	addDynamicallyGeneratedStrings(&i18nStrings)
-
+	if !skipDynamic {
+		addDynamicallyGeneratedStrings(&i18nStrings)
+	}
 	i18nStringsList := []string{}
 	for id := range i18nStrings {
 		i18nStringsList = append(i18nStringsList, id)
@@ -267,6 +282,15 @@ func extractByFuncName(name string, args []ast.Expr) *string {
 		}
 		return &key.Value
 	} else if name == "newAppError" {
+		if len(args) < 1 {
+			return nil
+		}
+		key, ok := args[0].(*ast.BasicLit)
+		if !ok {
+			return nil
+		}
+		return &key.Value
+	} else if name == "NewUserFacingError" {
 		if len(args) < 1 {
 			return nil
 		}
