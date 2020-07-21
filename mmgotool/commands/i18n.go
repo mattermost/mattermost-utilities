@@ -48,11 +48,11 @@ var CheckCmd = &cobra.Command{
 
 func init() {
 	ExtractCmd.Flags().Bool("skip-dynamic", false, "Whether to skip dynamically added translations")
-	ExtractCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
+	ExtractCmd.Flags().String("portal-dir", "", "Path to folder with the Mattermost Customer Portal source code")
 	ExtractCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	ExtractCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
 	CheckCmd.Flags().Bool("skip-dynamic", false, "Whether to skip dynamically added translations")
-	CheckCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
+	CheckCmd.Flags().String("portal-dir", "", "Path to folder with the Mattermost Customer Portal source code")
 	CheckCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	CheckCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
 	I18nCmd.AddCommand(
