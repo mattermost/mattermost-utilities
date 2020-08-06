@@ -49,10 +49,13 @@ var CheckCmd = &cobra.Command{
 }
 
 func init() {
+	ExtractCmd.Flags().Bool("skip-dynamic", false, "Whether to skip dynamically added translations")
+	ExtractCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
 	ExtractCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	ExtractCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
+	CheckCmd.Flags().Bool("skip-dynamic", false, "Whether to skip dynamically added translations")
+	CheckCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
 	ExtractCmd.Flags().Bool("contributor", false, "Allows contributors safely extract translations from source code without removing enterprise messages keys")
-
 	CheckCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	CheckCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
 
@@ -69,11 +72,11 @@ func getCurrentTranslations(mattermostDir string) ([]Translation, error) {
 		return nil, err
 	}
 	var translations []Translation
-	json.Unmarshal(jsonFile, &translations)
+	_ = json.Unmarshal(jsonFile, &translations)
 	return translations, nil
 }
 
-func extractStrings(enterpriseDir, mattermostDir string) map[string]bool {
+func extractStrings(enterpriseDir, mattermostDir, portalDir string) map[string]bool {
 	i18nStrings := map[string]bool{}
 	walkFunc := func(p string, info os.FileInfo, err error) error {
 		if strings.HasPrefix(p, path.Join(mattermostDir, "vendor")) {
@@ -81,12 +84,20 @@ func extractStrings(enterpriseDir, mattermostDir string) map[string]bool {
 		}
 		return extractFromPath(p, info, err, &i18nStrings)
 	}
-	filepath.Walk(mattermostDir, walkFunc)
-	filepath.Walk(enterpriseDir, walkFunc)
+	if portalDir != "" {
+		_ = filepath.Walk(portalDir, walkFunc)
+	} else {
+		_ = filepath.Walk(mattermostDir, walkFunc)
+		_ = filepath.Walk(enterpriseDir, walkFunc)
+	}
 	return i18nStrings
 }
 
 func extractCmdF(command *cobra.Command, args []string) error {
+	skipDynamic, err := command.Flags().GetBool("skip-dynamic")
+	if err != nil {
+		return errors.New("Invalid skip-dynamic parameter")
+	}
 	enterpriseDir, err := command.Flags().GetString("enterprise-dir")
 	if err != nil {
 		return errors.New("Invalid enterprise-dir parameter")
@@ -99,17 +110,29 @@ func extractCmdF(command *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.New("Invalid contributor parameter")
 	}
-
-	i18nStrings := extractStrings(enterpriseDir, mattermostDir)
-	addDynamicallyGeneratedStrings(&i18nStrings)
-
+	portalDir, err := command.Flags().GetString("portal-dir")
+	if err != nil {
+		return errors.New("Invalid portal-dir parameter")
+	}
+	translationDir := mattermostDir
+	if portalDir != "" {
+		if enterpriseDir != "" || mattermostDir != "" {
+			return errors.New("Please specify EITHER portal-dir or enterprise-dir/mattermost-dir")
+		}
+		skipDynamic = true // dynamics are not needed for portal
+		translationDir = portalDir
+	}
+	i18nStrings := extractStrings(enterpriseDir, mattermostDir, portalDir)
+	if !skipDynamic {
+		addDynamicallyGeneratedStrings(&i18nStrings)
+	}
 	i18nStringsList := []string{}
 	for id := range i18nStrings {
 		i18nStringsList = append(i18nStringsList, id)
 	}
 	sort.Strings(i18nStringsList)
 
-	translations, err := getCurrentTranslations(mattermostDir)
+	translations, err := getCurrentTranslations(translationDir)
 	if err != nil {
 		return err
 	}
@@ -146,6 +169,9 @@ func extractCmdF(command *cobra.Command, args []string) error {
 	sort.Slice(result, func(i, j int) bool { return result[i].Id < result[j].Id })
 
 	f, err := os.Create(path.Join(mattermostDir, "i18n", "en.json"))
+	if err != nil {
+		return err
+	}
 	defer f.Close()
 
 	encoder := json.NewEncoder(f)
@@ -160,6 +186,10 @@ func extractCmdF(command *cobra.Command, args []string) error {
 }
 
 func checkCmdF(command *cobra.Command, args []string) error {
+	skipDynamic, err := command.Flags().GetBool("skip-dynamic")
+	if err != nil {
+		return errors.New("Invalid skip-dynamic parameter")
+	}
 	enterpriseDir, err := command.Flags().GetString("enterprise-dir")
 	if err != nil {
 		return errors.New("Invalid enterprise-dir parameter")
@@ -168,17 +198,29 @@ func checkCmdF(command *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.New("Invalid mattermost-dir parameter")
 	}
-
-	i18nStrings := extractStrings(enterpriseDir, mattermostDir)
-	addDynamicallyGeneratedStrings(&i18nStrings)
-
+	portalDir, err := command.Flags().GetString("portal-dir")
+	if err != nil {
+		return errors.New("Invalid portal-dir parameter")
+	}
+	translationDir := mattermostDir
+	if portalDir != "" {
+		if enterpriseDir != "" || mattermostDir != "" {
+			return errors.New("Please specify EITHER portal-dir or enterprise-dir/mattermost-dir")
+		}
+		translationDir = portalDir
+		skipDynamic = true // dynamics are not needed for portal
+	}
+	i18nStrings := extractStrings(enterpriseDir, mattermostDir, portalDir)
+	if !skipDynamic {
+		addDynamicallyGeneratedStrings(&i18nStrings)
+	}
 	i18nStringsList := []string{}
 	for id := range i18nStrings {
 		i18nStringsList = append(i18nStringsList, id)
 	}
 	sort.Strings(i18nStringsList)
 
-	translations, err := getCurrentTranslations(mattermostDir)
+	translations, err := getCurrentTranslations(translationDir)
 	if err != nil {
 		return err
 	}
@@ -279,6 +321,15 @@ func extractByFuncName(name string, args []ast.Expr) *string {
 		}
 		return &key.Value
 	} else if name == "newAppError" {
+		if len(args) < 1 {
+			return nil
+		}
+		key, ok := args[0].(*ast.BasicLit)
+		if !ok {
+			return nil
+		}
+		return &key.Value
+	} else if name == "NewUserFacingError" {
 		if len(args) < 1 {
 			return nil
 		}
