@@ -20,6 +20,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const enterpiseKeyPrefix = "ent."
+
 type Translation struct {
 	Id          string      `json:"id"`
 	Translation interface{} `json:"translation"`
@@ -53,8 +55,10 @@ func init() {
 	ExtractCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
 	CheckCmd.Flags().Bool("skip-dynamic", false, "Whether to skip dynamically added translations")
 	CheckCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
+	ExtractCmd.Flags().Bool("contributor", false, "Allows contributors safely extract translations from source code without removing enterprise messages keys")
 	CheckCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	CheckCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
+
 	I18nCmd.AddCommand(
 		ExtractCmd,
 		CheckCmd,
@@ -102,6 +106,10 @@ func extractCmdF(command *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.New("Invalid mattermost-dir parameter")
 	}
+	contributorMode, err := command.Flags().GetBool("contributor")
+	if err != nil {
+		return errors.New("Invalid contributor parameter")
+	}
 	portalDir, err := command.Flags().GetString("portal-dir")
 	if err != nil {
 		return errors.New("Invalid portal-dir parameter")
@@ -147,6 +155,9 @@ func extractCmdF(command *cobra.Command, args []string) error {
 
 	for _, translationKey := range translationsList {
 		if _, hasKey := i18nStrings[translationKey]; !hasKey {
+			if contributorMode && strings.HasPrefix(translationKey, enterpiseKeyPrefix) {
+				continue
+			}
 			delete(resultMap, translationKey)
 		}
 	}
