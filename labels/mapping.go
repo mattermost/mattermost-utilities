@@ -108,11 +108,6 @@ var docs = []Label{
 	{"Docs/Not Needed", "Does not require documentation", "d4c5f9"},
 }
 
-var changelog = []Label{
-	{"Changelog/Done", "Required changelog entry has been written", "0e8a16"},
-	{"Changelog/Not Needed", "Does not require a changelog entry", "d4c5f9"},
-}
-
 var migrateMap = map[string]string{
 	"Bug":             "Type/Bug",
 	"Enhancement":     "Type/Enhancement",
