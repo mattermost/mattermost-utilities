@@ -6,6 +6,7 @@ var pluginLabelsWithoutHW = MergeLabels(coreLabels, issue, docs, plugin)
 var pluginLabels = MergeLabels(pluginLabelsWithoutHW, helpWanted)
 
 var defaultMapping = map[string][]Label{
+	"mattermost-icebreaker-plugin":        coreLabels,
 	"mattermost-plugin-agenda":            pluginLabels,
 	"mattermost-plugin-antivirus":         pluginLabels,
 	"mattermost-plugin-api":               pluginLabels,
@@ -26,6 +27,7 @@ var defaultMapping = map[string][]Label{
 	"mattermost-plugin-giphy-moussetc":    coreLabels,
 	"mattermost-plugin-github":            pluginLabels,
 	"mattermost-plugin-gitlab":            pluginLabels,
+	"mattermost-plugin-gmail":             coreLabels,
 	"mattermost-plugin-google-calendar":   pluginLabels,
 	"mattermost-plugin-incident-response": pluginLabels,
 	"mattermost-plugin-jenkins":           pluginLabels,
@@ -38,6 +40,7 @@ var defaultMapping = map[string][]Label{
 	"mattermost-plugin-nps":               pluginLabels,
 	"mattermost-plugin-oembed":            pluginLabels,
 	"mattermost-plugin-profanity-filter":  pluginLabels,
+	"mattermost-plugin-recommend":         coreLabels,
 	"mattermost-plugin-skype4business":    pluginLabels,
 	"mattermost-plugin-solar-lottery":     pluginLabels,
 	"mattermost-plugin-starter-template":  pluginLabels,
