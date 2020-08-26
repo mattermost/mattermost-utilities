@@ -4,7 +4,7 @@ const yargs = require('yargs');
 
 const i18nHandlers = require('./i18n_handlers');
 
-/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "[iI]gnored" }],*/
+/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "[iI]gnored" }]*/
 const ignored = yargs.
     usage('Usage: mmjstool <command> [options]').
     example('mmjstool i18n extract-webapp --webapp-dir ./', 'Extract all the i18n strings from the webapp source code').
