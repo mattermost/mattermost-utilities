@@ -201,95 +201,94 @@ export function i18nSplit(argv) {
 }
 
 export function i18nClean(argv) {
-    i18nCleanWebapp(argv);
-    i18nCleanMobile(argv);
+    const wCode = i18nCleanWebapp(argv);
+    const mCode = i18nCleanMobile(argv);
+    process.exit(wCode || mCode);
 }
 
 export function i18nCleanWebapp(argv) {
-    const webappDir = argv['webapp-dir']
-    const file = argv['file']
-    const fPath = path.join(webappDir, 'i18n')
-    const dryRun = argv['dry-run']
-    const check = argv['check']
-    const r = removeItems(fPath, file, dryRun)
-    if (r !== '') {
-        console.info(r)
-    }
-    if (check && r !== '') {
-        return process.exit(1);
-    }
+    const webappDir = argv['webapp-dir'];
+    const fPath = path.join(webappDir, 'i18n');
+    return clean(argv, fPath);
 }
 
 export function i18nCleanMobile(argv) {
-    const mobileDir = argv['mobile-dir']
-    const file = argv['file']
-    const fPath = path.join(mobileDir, 'assets', 'base', 'i18n')
-    const dryRun = argv['dry-run']
-    const check = argv['check']
-    const r = removeItems(fPath, file, dryRun)
+    const mobileDir = argv['mobile-dir'];
+    const fPath = path.join(mobileDir, 'assets', 'base', 'i18n');
+    return clean(argv, fPath);
+}
+
+function clean(argv, fPath) {
+    const file = argv.file;
+    const dryRun = argv['dry-run'];
+    const check = argv.check;
+    const r = removeItems(fPath, file, dryRun);
     if (r !== '') {
-        console.info(r)
+        console.info(r);
     }
     if (check && r !== '') {
-        return process.exit(1);
+        return 1;
     }
+    return 0;
 }
 
 export function i18nCleanAll(argv) {
-    i18nCleanAllWebapp(argv);
-    i18nCleanAllMobile(argv);
+    const wCode = i18nCleanAllWebapp(argv);
+    const mCode = i18nCleanAllMobile(argv);
+    process.exit(wCode || mCode);
 }
 
 export function i18nCleanAllWebapp(argv) {
-    const webappDir = argv['webapp-dir']
-    const dryRun = argv['dry-run']
-    const check = argv['check']
-    const fPath = path.join(webappDir, 'i18n')
+    const webappDir = argv['webapp-dir'];
+    const dryRun = argv['dry-run'];
+    const check = argv.check;
+    const fPath = path.join(webappDir, 'i18n');
     return cleanAll(fPath, dryRun, check);
 }
 
 export function i18nCleanAllMobile(argv) {
-    const mobileDir = argv['mobile-dir']
-    const dryRun = argv['dry-run']
-    const check = argv['check']
-    const fPath = path.join(mobileDir, 'assets', 'base', 'i18n')
+    const mobileDir = argv['mobile-dir'];
+    const dryRun = argv['dry-run'];
+    const check = argv.check;
+    const fPath = path.join(mobileDir, 'assets', 'base', 'i18n');
     return cleanAll(fPath, dryRun, check);
 }
 
 function cleanAll(fPath, dryRun, check) {
-    const files = fs.readdirSync(fPath)
-    let rs = ''
+    const files = fs.readdirSync(fPath);
+    let rs = '';
     for (const f of files) {
-        const r = removeItems(fPath, f, dryRun)
-        rs += r
+        const r = removeItems(fPath, f, dryRun);
+        rs += r;
     }
     if (rs !== '') {
-        console.info(fPath)
-        console.info(rs)
+        console.info(fPath);
+        console.info(rs);
     }
     if (check && rs !== '') {
-        return process.exit(1);
+        return 1;
     }
+    return 0;
 }
 
 export function removeItems(fPath, f, dryRun) {
     if (f.split('.').pop() !== 'json' || f === 'en.json') {
-        return ''
+        return '';
     }
-    let count = 0
+    let count = 0;
     const obj = JSON.parse(fs.readFileSync(path.join(fPath, f)).toString(), (k, v) => {
         if (v === '') {
-            count++
-        } else {
-            return v
+            count++;
+            return undefined; // eslint-disable-line no-undefined
         }
-    })
+        return v;
+    });
 
     if (count === 0) {
-        return ''
+        return '';
     }
     if (!dryRun) {
-        fs.writeFileSync(path.join(fPath, f), JSON.stringify(obj, null, 2) + '\n')
+        fs.writeFileSync(path.join(fPath, f), JSON.stringify(obj, null, 2) + '\n');
     }
-    return f + ' has ' + count + ' empty translations'
+    return f + ' has ' + count + ' empty translations\n';
 }
