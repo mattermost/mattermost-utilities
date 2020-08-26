@@ -83,15 +83,15 @@ func init() {
 	CheckCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	CheckCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
 
-	CleanCmd.Flags().Bool("dry-run", false, "Whether to not apply changes")
-	CleanCmd.Flags().Bool("check", false, "Whether to throw an exit code when there are empty strings present")
+	CleanCmd.Flags().Bool("dry-run", false, "Run without applying changes")
+	CleanCmd.Flags().Bool("check", false, "Throw exit code on empty translation strings")
 	CleanCmd.Flags().String("file", "de.json", "Filename, e.g. de.json, to clean empty translation strings from")
 	CleanCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
 	CleanCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	CleanCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
 
-	CleanAllCmd.Flags().Bool("dry-run", false, "Whether to not apply changes")
-	CleanAllCmd.Flags().Bool("check", false, "Whether to throw an exit code when there are empty strings present")
+	CleanAllCmd.Flags().Bool("dry-run", false, "Run without applying changes")
+	CleanAllCmd.Flags().Bool("check", false, "Throw exit code on empty translation strings")
 	CleanAllCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
 	CleanAllCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	CleanAllCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
@@ -633,9 +633,10 @@ func clean(translationDir string, f string, dryRun bool) (*string, error) {
 	}
 	cts, i := removeEmptyTranslations(ts)
 	r := ""
-	if i > 0 {
-		r = fmt.Sprintf("%v has %v empty translations\n", f, i)
+	if i == 0 {
+	    return &r, nil
 	}
+    r = fmt.Sprintf("%v has %v empty translations\n", f, i)
 
 	if !dryRun {
 		newJ, err := JSONMarshal(cts)
