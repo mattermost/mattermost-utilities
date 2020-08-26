@@ -258,7 +258,7 @@ function cleanAll(fPath, dryRun, check) {
     const files = fs.readdirSync(fPath);
     let rs = '';
     for (const f of files) {
-        const r = removeItems(fPath, f, dryRun);
+        const r = removeItems(fPath, f, dryRun, check);
         rs += r;
     }
     if (rs !== '') {
@@ -271,7 +271,7 @@ function cleanAll(fPath, dryRun, check) {
     return 0;
 }
 
-export function removeItems(fPath, f, dryRun) {
+export function removeItems(fPath, f, dryRun, check) {
     if (f.split('.').pop() !== 'json' || f === 'en.json') {
         return '';
     }
@@ -287,8 +287,10 @@ export function removeItems(fPath, f, dryRun) {
     if (count === 0) {
         return '';
     }
-    if (!dryRun) {
-        fs.writeFileSync(path.join(fPath, f), JSON.stringify(obj, null, 2) + '\n');
+    const msg = f + ' has ' + count + ' empty translations\n';
+    if (dryRun || check) {
+        return msg;
     }
-    return f + ' has ' + count + ' empty translations\n';
+    fs.writeFileSync(path.join(fPath, f), JSON.stringify(obj, null, 2) + '\n');
+    return msg;
 }

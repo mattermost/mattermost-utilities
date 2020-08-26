@@ -555,7 +555,7 @@ func cleanCmdF(command *cobra.Command, args []string) error {
 	}
 
 	if filepath.Ext(file) == ".json" && file != "en.json" {
-		i, err2 := clean(translationDir, file, dryRun)
+		i, err2 := clean(translationDir, file, dryRun, check)
 		if err2 != nil {
 			return err2
 		}
@@ -607,21 +607,25 @@ func cleanAllCmdF(command *cobra.Command, args []string) error {
 		}
 	}
 
-	rs := "\n"
+	rs := ""
 	for _, f := range shippedFs {
-		r, err2 := clean(translationDir, f, dryRun)
+		r, err2 := clean(translationDir, f, dryRun, check)
 		if err2 != nil {
 			return err2
 		}
 		rs += *r
 	}
-	if check && rs != "\n" {
-		log.Fatalf(rs)
+	if rs == "" {
+		return nil
+	}
+	fmt.Print("\n" + rs)
+	if check {
+		os.Exit(1)
 	}
 	return nil
 }
 
-func clean(translationDir string, f string, dryRun bool) (*string, error) {
+func clean(translationDir string, f string, dryRun bool, check bool) (*string, error) {
 	oldJ, err := ioutil.ReadFile(path.Join(translationDir, f))
 	if err != nil {
 		return nil, err
@@ -634,23 +638,24 @@ func clean(translationDir string, f string, dryRun bool) (*string, error) {
 	cts, i := removeEmptyTranslations(ts)
 	r := ""
 	if i == 0 {
-	    return &r, nil
+		return &r, nil
 	}
-    r = fmt.Sprintf("%v has %v empty translations\n", f, i)
+	r = fmt.Sprintf("%v has %v empty translations\n", f, i)
+	if dryRun || check {
+		return &r, nil
+	}
 
-	if !dryRun {
-		newJ, err := JSONMarshal(cts)
-		if err != nil {
-			return nil, err
-		}
-		filename := path.Join(translationDir, f)
-		fi, err := os.Lstat(filename)
-		if err != nil {
-			return nil, err
-		}
-		if err = ioutil.WriteFile(filename, newJ, fi.Mode().Perm()); err != nil {
-			return nil, err
-		}
+	newJ, err := JSONMarshal(cts)
+	if err != nil {
+		return nil, err
+	}
+	filename := path.Join(translationDir, f)
+	fi, err := os.Lstat(filename)
+	if err != nil {
+		return nil, err
+	}
+	if err = ioutil.WriteFile(filename, newJ, fi.Mode().Perm()); err != nil {
+		return nil, err
 	}
 	return &r, nil
 }
