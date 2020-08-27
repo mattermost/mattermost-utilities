@@ -72,67 +72,7 @@ const ignored = yargs.
                 () => { /* empty function */ },
                 i18nHandlers.i18nCheckWebapp,
             ).
-            command('clean',
-                'Read the translation file, find all the empty translation strings and remove the translation item',
-                (cleanArgs) => {
-                    cleanArgs.demandOption(['mobile-dir', 'webapp-dir', 'file']).
-                        option('file', {
-                            describe: 'File to remove empty translations from',
-                            default: 'de.json',
-                        }).
-                        option('check', {
-                            describe: 'Throw exit code on empty translation strings',
-                            default: false,
-                        }).
-                        option('dry-run', {
-                            describe: 'Run without applying changes',
-                            default: false,
-                        })
-                    ;
-                },
-                i18nHandlers.i18nClean,
-            ).
-            command('clean-webapp',
-                'Read the specific translation file, find all the empty translation strings and remove the translation item',
-                (cleanArgs) => {
-                    cleanArgs.demandOption(['webapp-dir', 'file']).
-                        option('file', {
-                            describe: 'File to remove empty translations from',
-                            default: 'de.json',
-                        }).
-                        option('check', {
-                            describe: 'Throw exit code on empty translation strings',
-                            default: false,
-                        }).
-                        option('dry-run', {
-                            describe: 'Run without applying changes',
-                            default: false,
-                        })
-                    ;
-                },
-                i18nHandlers.i18nCleanWebapp,
-            ).
-            command('clean-mobile',
-                'Read the specific translation file, find all the empty translation strings and remove the translation item',
-                (cleanArgs) => {
-                    cleanArgs.demandOption(['mobile-dir', 'file']).
-                        option('file', {
-                            describe: 'File to remove empty translations from',
-                            default: 'de.json',
-                        }).
-                        option('check', {
-                            describe: 'Throw exit code on empty translation strings',
-                            default: false,
-                        }).
-                        option('dry-run', {
-                            describe: 'Run without applying changes',
-                            default: false,
-                        })
-                    ;
-                },
-                i18nHandlers.i18nCleanMobile,
-            ).
-            command('clean-all',
+            command('clean-empty',
                 'Read the translation files other than the english base file, find all the empty translation strings and remove the translation item',
                 (cleanAllArgs) => {
                     cleanAllArgs.demandOption('mobile-dir', 'webapp-dir').
@@ -146,9 +86,9 @@ const ignored = yargs.
                         })
                     ;
                 },
-                i18nHandlers.i18nCleanAll,
+                i18nHandlers.i18nCleanEmpty,
             ).
-            command('clean-all-webapp',
+            command('clean-empty-webapp',
                 'Read the translation files other than the english base file, find all the empty translation strings and remove the translation item',
                 (cleanAllArgs) => {
                     cleanAllArgs.demandOption('webapp-dir').
@@ -162,9 +102,9 @@ const ignored = yargs.
                         })
                     ;
                 },
-                i18nHandlers.i18nCleanAllWebapp,
+                i18nHandlers.i18nCleanEmptyWebapp,
             ).
-            command('clean-all-mobile',
+            command('clean-empty-mobile',
                 'Read the translation files other than the english base file, find all the empty translation strings and remove the translation item',
                 (cleanAllArgs) => {
                     cleanAllArgs.demandOption('mobile-dir').
@@ -178,7 +118,7 @@ const ignored = yargs.
                         })
                     ;
                 },
-                i18nHandlers.i18nCleanAllMobile,
+                i18nHandlers.i18nCleanEmptyMobile,
             ).
             option('webapp-dir', {
                 describe: 'webapp source code directory',

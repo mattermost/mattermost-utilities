@@ -12,7 +12,6 @@ import (
 	"go/parser"
 	"go/token"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -55,20 +54,12 @@ var CheckCmd = &cobra.Command{
 	RunE:    checkCmdF,
 }
 
-var CleanCmd = &cobra.Command{
-	Use:     "clean",
+var CleanEmptyCmd = &cobra.Command{
+	Use:     "clean-empty",
 	Short:   "Clean empty translations",
 	Long:    "Clean empty translations in translation files other than i18n/en.json base file",
-	Example: "  i18n clean",
-	RunE:    cleanCmdF,
-}
-
-var CleanAllCmd = &cobra.Command{
-	Use:     "clean-all",
-	Short:   "Clean all empty translations",
-	Long:    "Clean all empty translations in translation files other than i18n/en.json base file",
-	Example: "  i18n clean-all",
-	RunE:    cleanAllCmdF,
+	Example: "  i18n clean-empty",
+	RunE:    cleanEmptyCmdF,
 }
 
 func init() {
@@ -83,24 +74,16 @@ func init() {
 	CheckCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	CheckCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
 
-	CleanCmd.Flags().Bool("dry-run", false, "Run without applying changes")
-	CleanCmd.Flags().Bool("check", false, "Throw exit code on empty translation strings")
-	CleanCmd.Flags().String("file", "de.json", "Filename, e.g. de.json, to clean empty translation strings from")
-	CleanCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
-	CleanCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
-	CleanCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
-
-	CleanAllCmd.Flags().Bool("dry-run", false, "Run without applying changes")
-	CleanAllCmd.Flags().Bool("check", false, "Throw exit code on empty translation strings")
-	CleanAllCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
-	CleanAllCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
-	CleanAllCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
+	CleanEmptyCmd.Flags().Bool("dry-run", false, "Run without applying changes")
+	CleanEmptyCmd.Flags().Bool("check", false, "Throw exit code on empty translation strings")
+	CleanEmptyCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
+	CleanEmptyCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
+	CleanEmptyCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
 
 	I18nCmd.AddCommand(
 		ExtractCmd,
 		CheckCmd,
-		CleanCmd,
-		CleanAllCmd,
+		CleanEmptyCmd,
 	)
 	RootCmd.AddCommand(I18nCmd)
 }
@@ -521,53 +504,7 @@ func extractFromPath(path string, info os.FileInfo, err error, i18nStrings *map[
 	return nil
 }
 
-func cleanCmdF(command *cobra.Command, args []string) error {
-	dryRun, err := command.Flags().GetBool("dry-run")
-	if err != nil {
-		return errors.New("invalid dry-run parameter")
-	}
-	check, err := command.Flags().GetBool("check")
-	if err != nil {
-		return errors.New("invalid check parameter")
-	}
-	file, err := command.Flags().GetString("file")
-	if err != nil {
-		return errors.New("invalid file parameter")
-	}
-	enterpriseDir, err := command.Flags().GetString("enterprise-dir")
-	if err != nil {
-		return errors.New("invalid enterprise-dir parameter")
-	}
-	mattermostDir, err := command.Flags().GetString("mattermost-dir")
-	if err != nil {
-		return errors.New("invalid mattermost-dir parameter")
-	}
-	portalDir, err := command.Flags().GetString("portal-dir")
-	if err != nil {
-		return errors.New("invalid portal-dir parameter")
-	}
-	translationDir := path.Join(mattermostDir, "i18n")
-	if portalDir != "" {
-		if enterpriseDir != "" || mattermostDir != "" {
-			return errors.New("please specify EITHER portal-dir or enterprise-dir/mattermost-dir")
-		}
-		translationDir = portalDir
-	}
-
-	if filepath.Ext(file) == ".json" && file != "en.json" {
-		i, err2 := clean(translationDir, file, dryRun, check)
-		if err2 != nil {
-			return err2
-		}
-		if check {
-			log.Fatalf("%v has %v empty translations\n", file, i)
-		}
-	}
-
-	return nil
-}
-
-func cleanAllCmdF(command *cobra.Command, args []string) error {
+func cleanEmptyCmdF(command *cobra.Command, args []string) error {
 	dryRun, err := command.Flags().GetBool("dry-run")
 	if err != nil {
 		return errors.New("invalid dry-run parameter")
@@ -596,82 +533,82 @@ func cleanAllCmdF(command *cobra.Command, args []string) error {
 		translationDir = portalDir
 	}
 
-	var shippedFs []string
+	var shippedFiles []string
 	files, err := ioutil.ReadDir(translationDir)
 	if err != nil {
 		return err
 	}
-	for _, f := range files {
-		if !f.IsDir() && filepath.Ext(f.Name()) == ".json" && f.Name() != "en.json" {
-			shippedFs = append(shippedFs, f.Name())
+	for _, file := range files {
+		if !file.IsDir() && filepath.Ext(file.Name()) == ".json" && file.Name() != "en.json" {
+			shippedFiles = append(shippedFiles, file.Name())
 		}
 	}
 
-	rs := ""
-	for _, f := range shippedFs {
-		r, err2 := clean(translationDir, f, dryRun, check)
+	results := ""
+	for _, file := range shippedFiles {
+		result, err2 := clean(translationDir, file, dryRun, check)
 		if err2 != nil {
 			return err2
 		}
-		rs += *r
+		results += *result
 	}
-	if rs == "" {
+	if results == "" {
 		return nil
 	}
-	fmt.Print("\n" + rs)
+	fmt.Print("\n" + results)
 	if check {
 		os.Exit(1)
 	}
 	return nil
 }
 
-func clean(translationDir string, f string, dryRun bool, check bool) (*string, error) {
-	oldJ, err := ioutil.ReadFile(path.Join(translationDir, f))
+func clean(translationDir string, file string, dryRun bool, check bool) (*string, error) {
+	oldJSON, err := ioutil.ReadFile(path.Join(translationDir, file))
 	if err != nil {
 		return nil, err
 	}
 
-	var ts []Item
-	if err = json.Unmarshal(oldJ, &ts); err != nil {
+	var oldList []Item
+	if err = json.Unmarshal(oldJSON, &oldList); err != nil {
 		return nil, err
 	}
-	cts, i := removeEmptyTranslations(ts)
-	r := ""
-	if i == 0 {
-		return &r, nil
+	newList, count := removeEmptyTranslations(oldList)
+	result := ""
+	if count == 0 {
+		return &result, nil
 	}
-	r = fmt.Sprintf("%v has %v empty translations\n", f, i)
+	result = fmt.Sprintf("%v has %v empty translations\n", file, count)
 	if dryRun || check {
-		return &r, nil
+		return &result, nil
 	}
 
-	newJ, err := JSONMarshal(cts)
+	newJSON, err := JSONMarshal(newList)
 	if err != nil {
 		return nil, err
 	}
-	filename := path.Join(translationDir, f)
-	fi, err := os.Lstat(filename)
+	filename := path.Join(translationDir, file)
+	fileInfo, err := os.Lstat(filename)
 	if err != nil {
 		return nil, err
 	}
-	if err = ioutil.WriteFile(filename, newJ, fi.Mode().Perm()); err != nil {
+	if err = ioutil.WriteFile(filename, newJSON, fileInfo.Mode().Perm()); err != nil {
 		return nil, err
 	}
-	return &r, nil
+	return &result, nil
 }
 
-func removeEmptyTranslations(ts []Item) ([]Item, int) {
-	var k int
-	var cts []Item
-	for i, t := range ts {
+func removeEmptyTranslations(oldList []Item) ([]Item, int) {
+	var count int
+	var newList []Item
+	for i, t := range oldList {
 		if string(t.Translation) != "\"\"" {
-			cts = append(cts, ts[i])
+			newList = append(newList, oldList[i])
 		} else {
-			k++
+			count++
 		}
 
 	}
-	return cts, k
+	return newList, count
 }
 
 func JSONMarshal(t interface{}) ([]byte, error) {

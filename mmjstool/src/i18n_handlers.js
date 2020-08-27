@@ -200,45 +200,13 @@ export function i18nSplit(argv) {
     });
 }
 
-export function i18nClean(argv) {
-    const wCode = i18nCleanWebapp(argv);
-    const mCode = i18nCleanMobile(argv);
+export function i18nCleanEmpty(argv) {
+    const wCode = i18nCleanEmptyWebapp(argv);
+    const mCode = i18nCleanEmptyMobile(argv);
     process.exit(wCode || mCode);
 }
 
-export function i18nCleanWebapp(argv) {
-    const webappDir = argv['webapp-dir'];
-    const fPath = path.join(webappDir, 'i18n');
-    return clean(argv, fPath);
-}
-
-export function i18nCleanMobile(argv) {
-    const mobileDir = argv['mobile-dir'];
-    const fPath = path.join(mobileDir, 'assets', 'base', 'i18n');
-    return clean(argv, fPath);
-}
-
-function clean(argv, fPath) {
-    const file = argv.file;
-    const dryRun = argv['dry-run'];
-    const check = argv.check;
-    const r = removeItems(fPath, file, dryRun);
-    if (r !== '') {
-        console.info(r);
-    }
-    if (check && r !== '') {
-        return 1;
-    }
-    return 0;
-}
-
-export function i18nCleanAll(argv) {
-    const wCode = i18nCleanAllWebapp(argv);
-    const mCode = i18nCleanAllMobile(argv);
-    process.exit(wCode || mCode);
-}
-
-export function i18nCleanAllWebapp(argv) {
+export function i18nCleanEmptyWebapp(argv) {
     const webappDir = argv['webapp-dir'];
     const dryRun = argv['dry-run'];
     const check = argv.check;
@@ -246,7 +214,7 @@ export function i18nCleanAllWebapp(argv) {
     return cleanAll(fPath, dryRun, check);
 }
 
-export function i18nCleanAllMobile(argv) {
+export function i18nCleanEmptyMobile(argv) {
     const mobileDir = argv['mobile-dir'];
     const dryRun = argv['dry-run'];
     const check = argv.check;
@@ -254,29 +222,30 @@ export function i18nCleanAllMobile(argv) {
     return cleanAll(fPath, dryRun, check);
 }
 
-function cleanAll(fPath, dryRun, check) {
-    const files = fs.readdirSync(fPath);
-    let rs = '';
-    for (const f of files) {
-        const r = removeItems(fPath, f, dryRun, check);
-        rs += r;
+function cleanAll(filePath, dryRun, check) {
+    const files = fs.readdirSync(filePath);
+    let results = '';
+    for (const file of files) {
+        if (file.split('.').pop() !== 'json' || file === 'en.json') {
+            continue;
+        }
+        const result = removeItems(filePath, file, dryRun, check);
+        results += result;
     }
-    if (rs !== '') {
-        console.info(fPath);
-        console.info(rs);
+    if (results === '') {
+        return 0;
     }
-    if (check && rs !== '') {
+    console.info(filePath);
+    console.info(results);
+    if (check) {
         return 1;
     }
     return 0;
 }
 
-export function removeItems(fPath, f, dryRun, check) {
-    if (f.split('.').pop() !== 'json' || f === 'en.json') {
-        return '';
-    }
+export function removeItems(filePath, file, dryRun, check) {
     let count = 0;
-    const obj = JSON.parse(fs.readFileSync(path.join(fPath, f)).toString(), (k, v) => {
+    const obj = JSON.parse(fs.readFileSync(path.join(filePath, file)).toString(), (k, v) => {
         if (v === '') {
             count++;
             return undefined; // eslint-disable-line no-undefined
@@ -287,10 +256,10 @@ export function removeItems(fPath, f, dryRun, check) {
     if (count === 0) {
         return '';
     }
-    const msg = f + ' has ' + count + ' empty translations\n';
+    const msg = file + ' has ' + count + ' empty translations\n';
     if (dryRun || check) {
         return msg;
     }
-    fs.writeFileSync(path.join(fPath, f), JSON.stringify(obj, null, 2) + '\n');
+    fs.writeFileSync(path.join(filePath, file), JSON.stringify(obj, null, 2) + '\n');
     return msg;
 }
