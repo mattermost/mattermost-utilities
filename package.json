@@ -10,6 +10,7 @@
     "check": "eslint --ignore-pattern node_modules --ignore-pattern build --ext .js . --quiet",
     "fix": "eslint --ignore-pattern node_modules --ignore-pattern build --ext .js . --quiet --fix",
     "babel": "babel --presets @babel/env mmjstool/src/index.js mmjstool/src/i18n_extract.js mmjstool/src/i18n_handlers.js -d mmjstool/build",
+    "i18n": "babel --presets @babel/env mmjstool/src/index.js mmjstool/src/i18n_extract.js mmjstool/src/i18n_handlers.js -d mmjstool/build && node mmjstool/build/index.js i18n",
     "build": "webpack",
     "prepare": "webpack"
   },

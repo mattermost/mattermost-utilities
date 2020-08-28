@@ -72,6 +72,54 @@ const ignored = yargs.
                 () => { /* empty function */ },
                 i18nHandlers.i18nCheckWebapp,
             ).
+            command('clean-empty',
+                'Read the translation files other than the english base file, find all the empty translation strings and remove the translation item',
+                (cleanAllArgs) => {
+                    cleanAllArgs.demandOption('mobile-dir', 'webapp-dir').
+                        option('check', {
+                            describe: 'Throw exit code on empty translation strings',
+                            default: false,
+                        }).
+                        option('dry-run', {
+                            describe: 'Run without applying changes',
+                            default: false,
+                        })
+                    ;
+                },
+                i18nHandlers.i18nCleanEmpty,
+            ).
+            command('clean-empty-webapp',
+                'Read the translation files other than the english base file, find all the empty translation strings and remove the translation item',
+                (cleanAllArgs) => {
+                    cleanAllArgs.demandOption('webapp-dir').
+                        option('check', {
+                            describe: 'Throw exit code on empty translation strings',
+                            default: false,
+                        }).
+                        option('dry-run', {
+                            describe: 'Run without applying changes',
+                            default: false,
+                        })
+                    ;
+                },
+                i18nHandlers.i18nCleanEmptyWebapp,
+            ).
+            command('clean-empty-mobile',
+                'Read the translation files other than the english base file, find all the empty translation strings and remove the translation item',
+                (cleanAllArgs) => {
+                    cleanAllArgs.demandOption('mobile-dir').
+                        option('check', {
+                            describe: 'Throw exit code on empty translation strings',
+                            default: false,
+                        }).
+                        option('dry-run', {
+                            describe: 'Run without applying changes',
+                            default: false,
+                        })
+                    ;
+                },
+                i18nHandlers.i18nCleanEmptyMobile,
+            ).
             option('webapp-dir', {
                 describe: 'webapp source code directory',
                 default: '../mattermost-webapp',

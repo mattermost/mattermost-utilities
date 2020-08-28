@@ -1,6 +1,6 @@
 {
   "extends": [
-    "./node_modules/eslint-config-mattermost/.eslintrc.json"
+    "./node_modules/eslint-config-mattermost/configs/.eslintrc.json"
   ],
   "plugins": [
     "import"

@@ -4,6 +4,7 @@
 package commands
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -20,11 +21,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const enterpiseKeyPrefix = "ent."
+const enterpriseKeyPrefix = "ent."
 
 type Translation struct {
 	Id          string      `json:"id"`
 	Translation interface{} `json:"translation"`
+}
+
+type Item struct {
+	ID          string          `json:"id"`
+	Translation json.RawMessage `json:"translation"`
 }
 
 var I18nCmd = &cobra.Command{
@@ -44,8 +50,16 @@ var CheckCmd = &cobra.Command{
 	Use:     "check",
 	Short:   "Check translations",
 	Long:    "Check translations existing in the source code and compare it to the i18n/en.json file",
-	Example: "  i18n list",
+	Example: "  i18n check",
 	RunE:    checkCmdF,
+}
+
+var CleanEmptyCmd = &cobra.Command{
+	Use:     "clean-empty",
+	Short:   "Clean empty translations",
+	Long:    "Clean empty translations in translation files other than i18n/en.json base file",
+	Example: "  i18n clean-empty",
+	RunE:    cleanEmptyCmdF,
 }
 
 func init() {
@@ -53,20 +67,28 @@ func init() {
 	ExtractCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
 	ExtractCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	ExtractCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
+	ExtractCmd.Flags().Bool("contributor", false, "Allows contributors safely extract translations from source code without removing enterprise messages keys")
+
 	CheckCmd.Flags().Bool("skip-dynamic", false, "Whether to skip dynamically added translations")
 	CheckCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
-	ExtractCmd.Flags().Bool("contributor", false, "Allows contributors safely extract translations from source code without removing enterprise messages keys")
 	CheckCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	CheckCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
+
+	CleanEmptyCmd.Flags().Bool("dry-run", false, "Run without applying changes")
+	CleanEmptyCmd.Flags().Bool("check", false, "Throw exit code on empty translation strings")
+	CleanEmptyCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
+	CleanEmptyCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
+	CleanEmptyCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
 
 	I18nCmd.AddCommand(
 		ExtractCmd,
 		CheckCmd,
+		CleanEmptyCmd,
 	)
 	RootCmd.AddCommand(I18nCmd)
 }
 
-func getCurrentTranslations(mattermostDir string) ([]Translation, error) {
+func getBaseFileSrcStrings(mattermostDir string) ([]Translation, error) {
 	jsonFile, err := ioutil.ReadFile(path.Join(mattermostDir, "i18n", "en.json"))
 	if err != nil {
 		return nil, err
@@ -76,7 +98,7 @@ func getCurrentTranslations(mattermostDir string) ([]Translation, error) {
 	return translations, nil
 }
 
-func extractStrings(enterpriseDir, mattermostDir, portalDir string) map[string]bool {
+func extractSrcStrings(enterpriseDir, mattermostDir, portalDir string) map[string]bool {
 	i18nStrings := map[string]bool{}
 	walkFunc := func(p string, info os.FileInfo, err error) error {
 		if strings.HasPrefix(p, path.Join(mattermostDir, "vendor")) {
@@ -96,56 +118,56 @@ func extractStrings(enterpriseDir, mattermostDir, portalDir string) map[string]b
 func extractCmdF(command *cobra.Command, args []string) error {
 	skipDynamic, err := command.Flags().GetBool("skip-dynamic")
 	if err != nil {
-		return errors.New("Invalid skip-dynamic parameter")
+		return errors.New("invalid skip-dynamic parameter")
 	}
 	enterpriseDir, err := command.Flags().GetString("enterprise-dir")
 	if err != nil {
-		return errors.New("Invalid enterprise-dir parameter")
+		return errors.New("invalid enterprise-dir parameter")
 	}
 	mattermostDir, err := command.Flags().GetString("mattermost-dir")
 	if err != nil {
-		return errors.New("Invalid mattermost-dir parameter")
+		return errors.New("invalid mattermost-dir parameter")
 	}
 	contributorMode, err := command.Flags().GetBool("contributor")
 	if err != nil {
-		return errors.New("Invalid contributor parameter")
+		return errors.New("invalid contributor parameter")
 	}
 	portalDir, err := command.Flags().GetString("portal-dir")
 	if err != nil {
-		return errors.New("Invalid portal-dir parameter")
+		return errors.New("invalid portal-dir parameter")
 	}
 	translationDir := mattermostDir
 	if portalDir != "" {
 		if enterpriseDir != "" || mattermostDir != "" {
-			return errors.New("Please specify EITHER portal-dir or enterprise-dir/mattermost-dir")
+			return errors.New("please specify EITHER portal-dir or enterprise-dir/mattermost-dir")
 		}
 		skipDynamic = true // dynamics are not needed for portal
 		translationDir = portalDir
 	}
-	i18nStrings := extractStrings(enterpriseDir, mattermostDir, portalDir)
+	i18nStrings := extractSrcStrings(enterpriseDir, mattermostDir, portalDir)
 	if !skipDynamic {
 		addDynamicallyGeneratedStrings(&i18nStrings)
 	}
-	i18nStringsList := []string{}
+	var i18nStringsList []string
 	for id := range i18nStrings {
 		i18nStringsList = append(i18nStringsList, id)
 	}
 	sort.Strings(i18nStringsList)
 
-	translations, err := getCurrentTranslations(translationDir)
+	sourceStrings, err := getBaseFileSrcStrings(translationDir)
 	if err != nil {
 		return err
 	}
 
-	translationsList := []string{}
+	var baseFileList []string
 	idx := map[string]bool{}
 	resultMap := map[string]Translation{}
-	for _, t := range translations {
+	for _, t := range sourceStrings {
 		idx[t.Id] = true
-		translationsList = append(translationsList, t.Id)
+		baseFileList = append(baseFileList, t.Id)
 		resultMap[t.Id] = t
 	}
-	sort.Strings(translationsList)
+	sort.Strings(baseFileList)
 
 	for _, translationKey := range i18nStringsList {
 		if _, hasKey := idx[translationKey]; !hasKey {
@@ -153,16 +175,16 @@ func extractCmdF(command *cobra.Command, args []string) error {
 		}
 	}
 
-	for _, translationKey := range translationsList {
+	for _, translationKey := range baseFileList {
 		if _, hasKey := i18nStrings[translationKey]; !hasKey {
-			if contributorMode && strings.HasPrefix(translationKey, enterpiseKeyPrefix) {
+			if contributorMode && strings.HasPrefix(translationKey, enterpriseKeyPrefix) {
 				continue
 			}
 			delete(resultMap, translationKey)
 		}
 	}
 
-	result := []Translation{}
+	var result []Translation
 	for _, t := range resultMap {
 		result = append(result, t)
 	}
@@ -188,68 +210,68 @@ func extractCmdF(command *cobra.Command, args []string) error {
 func checkCmdF(command *cobra.Command, args []string) error {
 	skipDynamic, err := command.Flags().GetBool("skip-dynamic")
 	if err != nil {
-		return errors.New("Invalid skip-dynamic parameter")
+		return errors.New("invalid skip-dynamic parameter")
 	}
 	enterpriseDir, err := command.Flags().GetString("enterprise-dir")
 	if err != nil {
-		return errors.New("Invalid enterprise-dir parameter")
+		return errors.New("invalid enterprise-dir parameter")
 	}
 	mattermostDir, err := command.Flags().GetString("mattermost-dir")
 	if err != nil {
-		return errors.New("Invalid mattermost-dir parameter")
+		return errors.New("invalid mattermost-dir parameter")
 	}
 	portalDir, err := command.Flags().GetString("portal-dir")
 	if err != nil {
-		return errors.New("Invalid portal-dir parameter")
+		return errors.New("invalid portal-dir parameter")
 	}
 	translationDir := mattermostDir
 	if portalDir != "" {
 		if enterpriseDir != "" || mattermostDir != "" {
-			return errors.New("Please specify EITHER portal-dir or enterprise-dir/mattermost-dir")
+			return errors.New("please specify EITHER portal-dir or enterprise-dir/mattermost-dir")
 		}
 		translationDir = portalDir
 		skipDynamic = true // dynamics are not needed for portal
 	}
-	i18nStrings := extractStrings(enterpriseDir, mattermostDir, portalDir)
+	extractedSrcStrings := extractSrcStrings(enterpriseDir, mattermostDir, portalDir)
 	if !skipDynamic {
-		addDynamicallyGeneratedStrings(&i18nStrings)
+		addDynamicallyGeneratedStrings(&extractedSrcStrings)
 	}
-	i18nStringsList := []string{}
-	for id := range i18nStrings {
-		i18nStringsList = append(i18nStringsList, id)
+	var extractedList []string
+	for id := range extractedSrcStrings {
+		extractedList = append(extractedList, id)
 	}
-	sort.Strings(i18nStringsList)
+	sort.Strings(extractedList)
 
-	translations, err := getCurrentTranslations(translationDir)
+	srcStrings, err := getBaseFileSrcStrings(translationDir)
 	if err != nil {
 		return err
 	}
 
-	translationsList := []string{}
+	var baseFileList []string
 	idx := map[string]bool{}
-	for _, t := range translations {
+	for _, t := range srcStrings {
 		idx[t.Id] = true
-		translationsList = append(translationsList, t.Id)
+		baseFileList = append(baseFileList, t.Id)
 	}
-	sort.Strings(translationsList)
+	sort.Strings(baseFileList)
 
 	changed := false
-	for _, translationKey := range i18nStringsList {
+	for _, translationKey := range extractedList {
 		if _, hasKey := idx[translationKey]; !hasKey {
 			fmt.Println("Added:", translationKey)
 			changed = true
 		}
 	}
 
-	for _, translationKey := range translationsList {
-		if _, hasKey := i18nStrings[translationKey]; !hasKey {
+	for _, translationKey := range baseFileList {
+		if _, hasKey := extractedSrcStrings[translationKey]; !hasKey {
 			fmt.Println("Removed:", translationKey)
 			changed = true
 		}
 	}
 	if changed {
 		command.SilenceUsage = true
-		return errors.New("Translations file out of date.")
+		return errors.New("translation source strings file out of date")
 	}
 	return nil
 }
@@ -382,7 +404,7 @@ func extractByFuncName(name string, args []ast.Expr) *string {
 	return nil
 }
 
-func extractForCostants(name string, value_node ast.Expr) *string {
+func extractForConstants(name string, valueNode ast.Expr) *string {
 	validConstants := map[string]bool{
 		"MISSING_CHANNEL_ERROR":        true,
 		"MISSING_CHANNEL_MEMBER_ERROR": true,
@@ -398,7 +420,7 @@ func extractForCostants(name string, value_node ast.Expr) *string {
 	if _, ok := validConstants[name]; !ok {
 		return nil
 	}
-	value, ok := value_node.(*ast.BasicLit)
+	value, ok := valueNode.(*ast.BasicLit)
 
 	if !ok {
 		return nil
@@ -451,17 +473,17 @@ func extractFromPath(path string, info os.FileInfo, err error, i18nStrings *map[
 		case *ast.GenDecl:
 			if expr.Tok == token.CONST {
 				for _, spec := range expr.Specs {
-					value_spec, ok := spec.(*ast.ValueSpec)
+					valueSpec, ok := spec.(*ast.ValueSpec)
 					if !ok {
 						continue
 					}
-					if len(value_spec.Names) == 0 {
+					if len(valueSpec.Names) == 0 {
 						continue
 					}
-					if len(value_spec.Values) == 0 {
+					if len(valueSpec.Values) == 0 {
 						continue
 					}
-					id = extractForCostants(value_spec.Names[0].Name, value_spec.Values[0])
+					id = extractForConstants(valueSpec.Names[0].Name, valueSpec.Values[0])
 					if id == nil {
 						continue
 					}
@@ -480,4 +502,120 @@ func extractFromPath(path string, info os.FileInfo, err error, i18nStrings *map[
 		return true
 	})
 	return nil
+}
+
+func cleanEmptyCmdF(command *cobra.Command, args []string) error {
+	dryRun, err := command.Flags().GetBool("dry-run")
+	if err != nil {
+		return errors.New("invalid dry-run parameter")
+	}
+	check, err := command.Flags().GetBool("check")
+	if err != nil {
+		return errors.New("invalid check parameter")
+	}
+	enterpriseDir, err := command.Flags().GetString("enterprise-dir")
+	if err != nil {
+		return errors.New("invalid enterprise-dir parameter")
+	}
+	mattermostDir, err := command.Flags().GetString("mattermost-dir")
+	if err != nil {
+		return errors.New("invalid mattermost-dir parameter")
+	}
+	portalDir, err := command.Flags().GetString("portal-dir")
+	if err != nil {
+		return errors.New("invalid portal-dir parameter")
+	}
+	translationDir := path.Join(mattermostDir, "i18n")
+	if portalDir != "" {
+		if enterpriseDir != "" || mattermostDir != "" {
+			return errors.New("please specify EITHER portal-dir or enterprise-dir/mattermost-dir")
+		}
+		translationDir = portalDir
+	}
+
+	var shippedFiles []string
+	files, err := ioutil.ReadDir(translationDir)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if !file.IsDir() && filepath.Ext(file.Name()) == ".json" && file.Name() != "en.json" {
+			shippedFiles = append(shippedFiles, file.Name())
+		}
+	}
+
+	results := ""
+	for _, file := range shippedFiles {
+		result, err2 := clean(translationDir, file, dryRun, check)
+		if err2 != nil {
+			return err2
+		}
+		results += *result
+	}
+	if results == "" {
+		return nil
+	}
+	fmt.Print("\n" + results)
+	if check {
+		os.Exit(1)
+	}
+	return nil
+}
+
+func clean(translationDir string, file string, dryRun bool, check bool) (*string, error) {
+	oldJSON, err := ioutil.ReadFile(path.Join(translationDir, file))
+	if err != nil {
+		return nil, err
+	}
+
+	var oldList []Item
+	if err = json.Unmarshal(oldJSON, &oldList); err != nil {
+		return nil, err
+	}
+	newList, count := removeEmptyTranslations(oldList)
+	result := ""
+	if count == 0 {
+		return &result, nil
+	}
+	result = fmt.Sprintf("%v has %v empty translations\n", file, count)
+	if dryRun || check {
+		return &result, nil
+	}
+
+	newJSON, err := JSONMarshal(newList)
+	if err != nil {
+		return nil, err
+	}
+	filename := path.Join(translationDir, file)
+	fileInfo, err := os.Lstat(filename)
+	if err != nil {
+		return nil, err
+	}
+	if err = ioutil.WriteFile(filename, newJSON, fileInfo.Mode().Perm()); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func removeEmptyTranslations(oldList []Item) ([]Item, int) {
+	var count int
+	var newList []Item
+	for i, t := range oldList {
+		if string(t.Translation) != "\"\"" {
+			newList = append(newList, oldList[i])
+		} else {
+			count++
+		}
+
+	}
+	return newList, count
+}
+
+func JSONMarshal(t interface{}) ([]byte, error) {
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "    ")
+	err := encoder.Encode(t)
+	return buffer.Bytes(), err
 }

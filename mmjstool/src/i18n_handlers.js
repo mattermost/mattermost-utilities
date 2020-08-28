@@ -199,3 +199,67 @@ export function i18nSplit(argv) {
         }
     });
 }
+
+export function i18nCleanEmpty(argv) {
+    const wCode = i18nCleanEmptyWebapp(argv);
+    const mCode = i18nCleanEmptyMobile(argv);
+    process.exit(wCode || mCode);
+}
+
+export function i18nCleanEmptyWebapp(argv) {
+    const webappDir = argv['webapp-dir'];
+    const dryRun = argv['dry-run'];
+    const check = argv.check;
+    const fPath = path.join(webappDir, 'i18n');
+    return cleanAll(fPath, dryRun, check);
+}
+
+export function i18nCleanEmptyMobile(argv) {
+    const mobileDir = argv['mobile-dir'];
+    const dryRun = argv['dry-run'];
+    const check = argv.check;
+    const fPath = path.join(mobileDir, 'assets', 'base', 'i18n');
+    return cleanAll(fPath, dryRun, check);
+}
+
+function cleanAll(filePath, dryRun, check) {
+    const files = fs.readdirSync(filePath);
+    let results = '';
+    for (const file of files) {
+        if (file.split('.').pop() !== 'json' || file === 'en.json') {
+            continue;
+        }
+        const result = removeItems(filePath, file, dryRun, check);
+        results += result;
+    }
+    if (results === '') {
+        return 0;
+    }
+    console.info(filePath);
+    console.info(results);
+    if (check) {
+        return 1;
+    }
+    return 0;
+}
+
+export function removeItems(filePath, file, dryRun, check) {
+    let count = 0;
+    const obj = JSON.parse(fs.readFileSync(path.join(filePath, file)).toString(), (k, v) => {
+        if (v === '') {
+            count++;
+            return undefined; // eslint-disable-line no-undefined
+        }
+        return v;
+    });
+
+    if (count === 0) {
+        return '';
+    }
+    const msg = file + ' has ' + count + ' empty translations\n';
+    if (dryRun || check) {
+        return msg;
+    }
+    fs.writeFileSync(path.join(filePath, file), JSON.stringify(obj, null, 2) + '\n');
+    return msg;
+}
