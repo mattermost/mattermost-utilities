@@ -60,7 +60,6 @@ var rootCmd = &cobra.Command{
 			if migrate {
 				labels = []Label{}
 			} else {
-				labels = defaultLabels
 				switch {
 				case usePluginLabels:
 					labels = pluginLabels

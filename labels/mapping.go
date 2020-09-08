@@ -1,12 +1,12 @@
 package main
 
-var defaultLabels = coreLabels
-var coreLabels = MergeLabels(pullRequest)
+var coreLabels = pullRequest
+var communityPlugins = MergeLabels(coreLabels, []Label{securityReview})
 var pluginLabelsWithoutHW = MergeLabels(coreLabels, issue, docs, plugin)
 var pluginLabels = MergeLabels(pluginLabelsWithoutHW, helpWanted)
 
 var defaultMapping = map[string][]Label{
-	"mattermost-icebreaker-plugin":        coreLabels,
+	"mattermost-icebreaker-plugin":        communityPlugins,
 	"mattermost-plugin-agenda":            pluginLabels,
 	"mattermost-plugin-antivirus":         pluginLabels,
 	"mattermost-plugin-api":               pluginLabels,
@@ -21,13 +21,13 @@ var defaultMapping = map[string][]Label{
 	"mattermost-plugin-custom-attributes": pluginLabels,
 	"mattermost-plugin-demo-creator":      pluginLabels,
 	"mattermost-plugin-demo":              pluginLabels,
-	"mattermost-plugin-digitalocean":      coreLabels,
+	"mattermost-plugin-digitalocean":      communityPlugins,
 	"mattermost-plugin-docup":             pluginLabels,
 	"mattermost-plugin-email-reply":       pluginLabels,
-	"mattermost-plugin-giphy-moussetc":    coreLabels,
+	"mattermost-plugin-giphy-moussetc":    communityPlugins,
 	"mattermost-plugin-github":            pluginLabels,
 	"mattermost-plugin-gitlab":            pluginLabels,
-	"mattermost-plugin-gmail":             coreLabels,
+	"mattermost-plugin-gmail":             communityPlugins,
 	"mattermost-plugin-google-calendar":   pluginLabels,
 	"mattermost-plugin-incident-response": pluginLabels,
 	"mattermost-plugin-jenkins":           pluginLabels,
@@ -40,7 +40,7 @@ var defaultMapping = map[string][]Label{
 	"mattermost-plugin-nps":               pluginLabels,
 	"mattermost-plugin-oembed":            pluginLabels,
 	"mattermost-plugin-profanity-filter":  pluginLabels,
-	"mattermost-plugin-recommend":         coreLabels,
+	"mattermost-plugin-recommend":         communityPlugins,
 	"mattermost-plugin-skype4business":    pluginLabels,
 	"mattermost-plugin-solar-lottery":     pluginLabels,
 	"mattermost-plugin-starter-template":  pluginLabels,
@@ -48,11 +48,16 @@ var defaultMapping = map[string][]Label{
 	"mattermost-plugin-todo":              pluginLabels,
 	"mattermost-plugin-walltime":          pluginLabels,
 	"mattermost-plugin-webex":             pluginLabels,
-	"mattermost-plugin-webrtc-video":      coreLabels,
+	"mattermost-plugin-webrtc-video":      communityPlugins,
 	"mattermost-plugin-welcomebot":        pluginLabels,
 	"mattermost-plugin-workflow-client":   pluginLabels,
 	"mattermost-plugin-workflow":          pluginLabelsWithoutHW,
 	"mattermost-plugin-zoom":              pluginLabels,
+	"standup-raven":                       communityPlugins,
+}
+
+var securityReview = Label{
+	"3: Security Review", "Review requested from Security Team", "1d76db",
 }
 
 // PR is the list of labels typically used on PRs. Use --
