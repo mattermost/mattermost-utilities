@@ -29,7 +29,7 @@ def cli(jira_username, jira_token, github_token, webhook_url, dry_run, debug):
 
     log = ""
     if len(issues) > 0:
-        log = create_github_issues(jira_username, jira_token, github_token, 'mattermost/mattermost-server', ['Help Wanted', 'Up For Grabs'], issues, dry_run)
+        log = create_github_issues(jira_username, jira_token, github_token, 'mattermost/mattermost-server', ['Help Wanted', 'Up For Grabs', 'Hacktoberfest'], issues, dry_run)
 
     if log:
         if webhook_url:
