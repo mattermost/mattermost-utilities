@@ -14,7 +14,7 @@ spec:
         spec:
           containers:
           - name: sync-helpwanted-tickets
-            image: mattermost/sync-helpwanted-tickets:1.0.1
+            image: mattermost/sync-helpwanted-tickets:1.0.5
             imagePullPolicy: IfNotPresent
             env:
             - name: GITHUB_TOKEN
