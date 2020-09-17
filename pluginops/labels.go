@@ -2,53 +2,48 @@ package main
 
 import (
 	"context"
-	"os"
 	"strings"
 	"sync"
 
-	"github.com/google/go-github/v28/github"
+	"github.com/google/go-github/v32/github"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"golang.org/x/oauth2"
 )
 
-const org = "mattermost"
-
-var verbose bool
-var useDefault bool
-var useRepo string
-var useCoreLabels bool
-var usePluginLabels bool
-var migrate bool
+var (
+	useDefault      bool
+	useRepo         string
+	useCoreLabels   bool
+	usePluginLabels bool
+)
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+	rootCmd.AddCommand(labelsCmd)
 
-	rootCmd.Flags().BoolVar(&useDefault, "default", false, "Updates default repos with the default labels, can not be combined with other flags.")
-	rootCmd.Flags().StringVar(&useRepo, "repo", "", "Github Mattermost repository name.")
-	rootCmd.Flags().BoolVar(&useCoreLabels, "core-labels", false, "Use a core set of Mattermost labels.")
-	rootCmd.Flags().BoolVar(&usePluginLabels, "plugin-labels", false, "Use Mattermost plugin-specific labels.")
-	rootCmd.Flags().BoolVar(&migrate, "migrate", false, "Migrate to existing label to new naming pattern.")
+	labelsCmd.AddCommand(
+		labelsSyncCmd,
+		labelsMigrateCmd,
+	)
+
+	labelsMigrateCmd.Flags().BoolVar(&useDefault, "default", false, "Updates default repos with the default labels, can not be combined with other flags.")
+	labelsMigrateCmd.Flags().StringVar(&useRepo, "repo", "", "Github Mattermost repository name.")
+
+	labelsSyncCmd.Flags().BoolVar(&useDefault, "default", false, "Updates default repos with the default labels, can not be combined with other flags.")
+	labelsSyncCmd.Flags().StringVar(&useRepo, "repo", "", "Github Mattermost repository name.")
+	labelsSyncCmd.Flags().BoolVar(&useCoreLabels, "core-labels", false, "Use a core set of Mattermost labels.")
+	labelsSyncCmd.Flags().BoolVar(&usePluginLabels, "plugin-labels", false, "Use Mattermost plugin-specific labels.")
 }
 
-func main() {
-	if err := rootCmd.Execute(); err != nil {
-		log.WithError(err).Fatal("command failed")
-	}
-}
-
-var rootCmd = &cobra.Command{
+var labelsCmd = &cobra.Command{
 	Use:   "labels",
+	Short: "Manage labels.",
+}
+
+var labelsSyncCmd = &cobra.Command{
+	Use:   "sync",
 	Short: "This tools allows syncing defined sets of labels across multiple repositories in a GitHub organization.",
 	Run: func(cmd *cobra.Command, args []string) {
-		token := os.Getenv("GITHUB_TOKEN")
-		if token == "" {
-			log.Fatal("You need to provide an access token")
-		}
-
-		if verbose {
-			log.SetLevel(log.DebugLevel)
-		}
+		client := getGitHubClient()
 
 		var mapping map[string][]Label
 		switch {
@@ -57,17 +52,13 @@ var rootCmd = &cobra.Command{
 
 		case useRepo != "":
 			var labels []Label
-			if migrate {
-				labels = []Label{}
-			} else {
-				switch {
-				case usePluginLabels:
-					labels = pluginLabels
-				case useCoreLabels:
-					labels = coreLabels
-				default:
-					log.Fatalf("You need to specify labels to set on %q, e.g. --core-labels or --plugin-labels", useRepo)
-				}
+			switch {
+			case usePluginLabels:
+				labels = pluginLabels
+			case useCoreLabels:
+				labels = coreLabels
+			default:
+				log.Fatalf("You need to specify labels to set on %q, e.g. --core-labels or --plugin-labels", useRepo)
 			}
 			mapping = map[string][]Label{
 				useRepo: labels,
@@ -76,41 +67,55 @@ var rootCmd = &cobra.Command{
 			log.Fatalf("You need to specify the repo to apply labels to, e.g. --repo=mattermost-test, or run the default settings with --default")
 		}
 
-		ts := oauth2.StaticTokenSource(
-			&oauth2.Token{AccessToken: token},
-		)
-		tc := oauth2.NewClient(context.Background(), ts)
-		client := github.NewClient(tc)
+		log.Info("Starting to sync labels")
 
-		if migrate {
-			log.Info("Start to migrate labels")
-
-			var wg sync.WaitGroup
-			for repo := range mapping {
-				wg.Add(1)
-				go func(repo string) {
-					migrateLabels(client, repo)
-					wg.Done()
-				}(repo)
-			}
-
-			wg.Wait()
-			log.WithFields(log.Fields{"number of repos": len(mapping)}).Info("Finished migrating labels")
-		} else {
-			log.Info("Starting to sync labels")
-
-			var wg sync.WaitGroup
-			for repo, labels := range mapping {
-				wg.Add(1)
-				go func(repo string, labels []Label) {
-					createOrUpdateLabels(client, repo, labels)
-					wg.Done()
-				}(repo, labels)
-			}
-
-			wg.Wait()
-			log.WithFields(log.Fields{"number of repos": len(mapping)}).Info("Finished syncing labels")
+		var wg sync.WaitGroup
+		for repo, labels := range mapping {
+			wg.Add(1)
+			go func(repo string, labels []Label) {
+				createOrUpdateLabels(client, repo, labels)
+				wg.Done()
+			}(repo, labels)
 		}
+
+		wg.Wait()
+		log.WithFields(log.Fields{"number of repos": len(mapping)}).Info("Finished syncing labels")
+
+	},
+}
+
+var labelsMigrateCmd = &cobra.Command{
+	Use:   "migrate",
+	Short: "Migrate labels across multiple repositories in a GitHub organization to a new naming schema.",
+	Run: func(cmd *cobra.Command, args []string) {
+		client := getGitHubClient()
+
+		var mapping map[string][]Label
+		switch {
+		case useDefault:
+			mapping = defaultMapping
+
+		case useRepo != "":
+			mapping = map[string][]Label{
+				useRepo: nil,
+			}
+		default:
+			log.Fatalf("You need to specify the repo to apply labels to, e.g. --repo=mattermost-test, or run the default settings with --default")
+		}
+
+		log.Info("Start to migrate labels")
+
+		var wg sync.WaitGroup
+		for repo := range mapping {
+			wg.Add(1)
+			go func(repo string) {
+				migrateLabels(client, repo)
+				wg.Done()
+			}(repo)
+		}
+
+		wg.Wait()
+		log.WithFields(log.Fields{"number of repos": len(mapping)}).Info("Finished migrating labels")
 	},
 }
 
@@ -191,6 +196,7 @@ func createOrUpdateLabels(client *github.Client, repo string, labels []Label) {
 
 	for _, remoteLabel := range remoteLabels {
 		found := false
+
 		for _, label := range labels {
 			if strings.EqualFold(remoteLabel.GetName(), label.Name) {
 				found = true
