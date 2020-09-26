@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/google/go-github/v32/github"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
@@ -34,10 +35,10 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func getGitHubClient() *github.Client {
+func getGitHubClient() (*github.Client, error) {
 	token := os.Getenv("GITHUB_TOKEN")
 	if token == "" {
-		log.Fatal("You need to provide an access token")
+		return nil, errors.New("You need to provide an access token")
 	}
 
 	ts := oauth2.StaticTokenSource(
@@ -45,5 +46,5 @@ func getGitHubClient() *github.Client {
 	)
 	tc := oauth2.NewClient(context.Background(), ts)
 
-	return github.NewClient(tc)
+	return github.NewClient(tc), nil
 }

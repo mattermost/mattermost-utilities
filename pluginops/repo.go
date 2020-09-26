@@ -37,7 +37,11 @@ var setupCommunityCmd = &cobra.Command{
 	Example: "   pluginops repo setup-fork mattermost-plugin-giphy-moussetc",
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := getGitHubClient()
+		client, err := getGitHubClient()
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+
 		repo := args[0]
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -55,7 +59,7 @@ var setupCommunityCmd = &cobra.Command{
 			HasPages:    github.Bool(false),
 			HasProjects: github.Bool(false),
 		}
-		_, _, err := client.Repositories.Edit(ctx, org, repo, repoSettings)
+		_, _, err = client.Repositories.Edit(ctx, org, repo, repoSettings)
 		if err != nil {
 			log.WithField("repo", repo).WithError(err).Error("Failed to update repository")
 			return
