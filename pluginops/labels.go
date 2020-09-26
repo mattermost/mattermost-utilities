@@ -123,6 +123,7 @@ func migrateLabels(client *github.Client, repo string) {
 	remoteLabels, err := fetchLabels(client, repo)
 	if err != nil {
 		log.WithField("repo", repo).WithError(err).Error("Failed to fetch labels")
+		return
 	}
 
 	for old, new := range migrateMap {
@@ -155,10 +156,31 @@ func migrateLabels(client *github.Client, repo string) {
 	}
 }
 
+func removeAllLabels(client *github.Client, repo string) {
+	remoteLabels, err := fetchLabels(client, repo)
+	if err != nil {
+		log.WithField("repo", repo).WithError(err).Error("Failed to fetch labels")
+		return
+	}
+
+	for _, remoteLabel := range remoteLabels {
+		logger := log.WithFields(log.Fields{"repo": repo, "label": remoteLabel.GetName()})
+
+		_, err = client.Issues.DeleteLabel(context.Background(), org, repo, remoteLabel.GetName())
+		if err != nil {
+			logger.WithError(err).Error("Failed to delete label")
+			continue
+		}
+
+		logger.Info("Deleted label")
+	}
+}
+
 func createOrUpdateLabels(client *github.Client, repo string, labels []Label) {
 	remoteLabels, err := fetchLabels(client, repo)
 	if err != nil {
 		log.WithField("repo", repo).WithError(err).Error("Failed to fetch labels")
+		return
 	}
 
 	for _, label := range labels {

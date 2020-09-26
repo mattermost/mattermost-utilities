@@ -21,6 +21,7 @@ var defaultMapping = map[string][]Label{
 	"mattermost-plugin-custom-attributes": pluginLabels,
 	"mattermost-plugin-demo-creator":      pluginLabels,
 	"mattermost-plugin-demo":              pluginLabels,
+	"mattermost-plugin-dice-roller":       communityPlugins,
 	"mattermost-plugin-digitalocean":      communityPlugins,
 	"mattermost-plugin-docup":             pluginLabels,
 	"mattermost-plugin-email-reply":       pluginLabels,
