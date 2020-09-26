@@ -91,6 +91,12 @@ var setupCommunityCmd = &cobra.Command{
 
 		log.Info("Successfully added needed permissions")
 
+		log.Info("Cleaning up existing labels")
+		removeAllLabels(client, repo)
+
+		log.Info("Setting up new labels")
+		createOrUpdateLabels(client, repo, communityPlugins)
+
 		for {
 			prompt := promptui.Prompt{
 				Label:     "Do want to add a Collaborator to the repo",
