@@ -43,7 +43,10 @@ var labelsSyncCmd = &cobra.Command{
 	Use:   "sync",
 	Short: "This tools allows syncing defined sets of labels across multiple repositories in a GitHub organization.",
 	Run: func(cmd *cobra.Command, args []string) {
-		client := getGitHubClient()
+		client, err := getGitHubClient()
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
 
 		var mapping map[string][]Label
 		switch {
@@ -88,7 +91,10 @@ var labelsMigrateCmd = &cobra.Command{
 	Use:   "migrate",
 	Short: "Migrate labels across multiple repositories in a GitHub organization to a new naming schema.",
 	Run: func(cmd *cobra.Command, args []string) {
-		client := getGitHubClient()
+		client, err := getGitHubClient()
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
 
 		var mapping map[string][]Label
 		switch {
