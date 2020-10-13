@@ -439,6 +439,9 @@ func extractFromPath(path string, info os.FileInfo, err error, i18nStrings *map[
 	if !strings.HasSuffix(path, ".go") {
 		return nil
 	}
+	if strings.Contains(path, ".git/") || strings.HasPrefix(path, ".git/") {
+		return nil
+	}
 
 	src, err := ioutil.ReadFile(path)
 	if err != nil {
