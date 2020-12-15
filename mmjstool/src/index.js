@@ -72,6 +72,21 @@ const ignored = yargs.
                 () => { /* empty function */ },
                 i18nHandlers.i18nCheckWebapp,
             ).
+            command('check-empty-src',
+                'Read the en.json base file and check for empty translation items',
+                () => { /* empty function */ },
+                i18nHandlers.i18nCheckEmptySrc,
+            ).
+            command('check-empty-src-mobile',
+                'Read the en.json base file and check for empty translation items',
+                () => { /* empty function */ },
+                i18nHandlers.i18nCheckEmptySrcMobile,
+            ).
+            command('check-empty-src-webapp',
+                'Read the en.json base file and check for empty translation items',
+                () => { /* empty function */ },
+                i18nHandlers.i18nCheckEmptySrcWebapp,
+            ).
             command('clean-empty',
                 'Read the translation files other than the english base file, find all the empty translation strings and remove the translation item',
                 (cleanAllArgs) => {

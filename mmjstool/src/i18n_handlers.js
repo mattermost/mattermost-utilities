@@ -200,6 +200,47 @@ export function i18nSplit(argv) {
     });
 }
 
+export function i18nCheckEmptySrc(argv) {
+    const wCode = i18nCheckEmptySrcWebapp(argv);
+    const mCode = i18nCheckEmptySrcMobile(argv);
+    process.exit(wCode || mCode);
+}
+
+export function i18nCheckEmptySrcWebapp(argv) {
+    const webappDir = argv['webapp-dir'];
+    const fPath = path.join(webappDir, 'i18n');
+    const counter = countEmptyItems(fPath, 'en.json');
+    if (counter > 0) {
+        const msg = 'Found ' + counter + ' empty translations in ' + fPath + '/en.json\n';
+        console.info(msg);
+        return 1;
+    }
+    return 0;
+}
+
+export function i18nCheckEmptySrcMobile(argv) {
+    const mobileDir = argv['mobile-dir'];
+    const fPath = path.join(mobileDir, 'assets', 'base', 'i18n');
+    const counter = countEmptyItems(fPath, 'en.json');
+    if (counter > 0) {
+        const msg = 'Found ' + counter + ' empty translations in ' + fPath + '/en.json\n';
+        console.info(msg);
+        return 1;
+    }
+    return 0;
+}
+
+function countEmptyItems(filePath, file) {
+    let count = 0;
+    JSON.parse(fs.readFileSync(path.join(filePath, file)).toString(), (k, v) => {
+        if (v === '') {
+            count++;
+        }
+        return v;
+    });
+    return count;
+}
+
 export function i18nCleanEmpty(argv) {
     const wCode = i18nCleanEmptyWebapp(argv);
     const mCode = i18nCleanEmptyMobile(argv);
