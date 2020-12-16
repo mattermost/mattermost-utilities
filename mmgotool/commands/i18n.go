@@ -54,6 +54,14 @@ var CheckCmd = &cobra.Command{
 	RunE:    checkCmdF,
 }
 
+var CheckEmptySrcCmd = &cobra.Command{
+	Use:     "check-empty-src",
+	Short:   "Check for empty translation source strings",
+	Long:    "Check the en.json file for empty translation source strings",
+	Example: "  i18n check-empty-src",
+	RunE:    checkEmptySrcCmdF,
+}
+
 var CleanEmptyCmd = &cobra.Command{
 	Use:     "clean-empty",
 	Short:   "Clean empty translations",
@@ -74,6 +82,10 @@ func init() {
 	CheckCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
 	CheckCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
 
+	CheckEmptySrcCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
+	CheckEmptySrcCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
+	CheckEmptySrcCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
+
 	CleanEmptyCmd.Flags().Bool("dry-run", false, "Run without applying changes")
 	CleanEmptyCmd.Flags().Bool("check", false, "Throw exit code on empty translation strings")
 	CleanEmptyCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
@@ -83,6 +95,7 @@ func init() {
 	I18nCmd.AddCommand(
 		ExtractCmd,
 		CheckCmd,
+		CheckEmptySrcCmd,
 		CleanEmptyCmd,
 	)
 	RootCmd.AddCommand(I18nCmd)
@@ -505,6 +518,52 @@ func extractFromPath(path string, info os.FileInfo, err error, i18nStrings *map[
 		return true
 	})
 	return nil
+}
+
+func checkEmptySrcCmdF(command *cobra.Command, args []string) error {
+	enterpriseDir, err := command.Flags().GetString("enterprise-dir")
+	if err != nil {
+		return errors.New("invalid enterprise-dir parameter")
+	}
+	mattermostDir, err := command.Flags().GetString("mattermost-dir")
+	if err != nil {
+		return errors.New("invalid mattermost-dir parameter")
+	}
+	portalDir, err := command.Flags().GetString("portal-dir")
+	if err != nil {
+		return errors.New("invalid portal-dir parameter")
+	}
+	translationDir := path.Join(mattermostDir, "i18n")
+	if portalDir != "" {
+		if enterpriseDir != "" || mattermostDir != "" {
+			return errors.New("please specify EITHER portal-dir or enterprise-dir/mattermost-dir")
+		}
+		translationDir = portalDir
+	}
+	srcJSON, err := ioutil.ReadFile(path.Join(translationDir, "en.json"))
+	if err != nil {
+		return err
+	}
+	var items []Item
+	if err = json.Unmarshal(srcJSON, &items); err != nil {
+		return err
+	}
+	count := countEmptyItems(items)
+	if count > 0 {
+		msg := fmt.Sprintf("please check %v/en.json for empty translation strings, detected %v", translationDir, count)
+		return errors.New(msg)
+	}
+	return nil
+}
+
+func countEmptyItems(items []Item) int {
+	var count int
+	for _, t := range items {
+		if string(t.Translation) == "\"\"" {
+			count++
+		}
+	}
+	return count
 }
 
 func cleanEmptyCmdF(command *cobra.Command, args []string) error {
