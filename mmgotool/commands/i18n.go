@@ -428,6 +428,15 @@ func extractForConstants(name string, valueNode ast.Expr) *string {
 		"MISSING_ACCOUNT_ERROR":        true,
 		"EXPIRED_LICENSE_ERROR":        true,
 		"INVALID_LICENSE_ERROR":        true,
+		"MissingChannelError":          true,
+		"MissingChannelMemberError":    true,
+		"ChannelExistsError":           true,
+		"MissingStatusError":           true,
+		"TeamMemberExistsError":        true,
+		"MissingAuthAccountError":      true,
+		"MissingAccountError":          true,
+		"ExpiredLicenseError":          true,
+		"InvalidLicenseError":          true,
 	}
 
 	if _, ok := validConstants[name]; !ok {
