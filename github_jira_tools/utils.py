@@ -1,3 +1,4 @@
+import time
 import requests
 from requests.auth import HTTPBasicAuth
 from github import Github
@@ -34,6 +35,8 @@ JIRA: https://mattermost.atlassian.net/browse/{{TICKET}}
             print('------\n{}\n{}\n\n{}'.format(title, "="*len(title), description))
             continue
 
+        # Add one second sleep per https://docs.github.com/en/rest/guides/best-practices-for-integrators#dealing-with-abuse-rate-limits
+        time.sleep(1)
         try:
             new_issue = r.create_issue(
                 title=title,
