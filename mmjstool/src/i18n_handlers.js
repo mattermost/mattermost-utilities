@@ -94,7 +94,7 @@ export function i18nExtractWebapp(argv) {
     const currentTranslations = getCurrentTranslationsWebapp(webappDir);
     const currentWebappKeys = new Set(Object.keys(currentTranslations));
 
-    i18nExtractLib.extractFromDirectory([argv['webapp-dir']], ['dist', 'node_modules', 'non_npm_dependencies', 'tests', 'components/gif_picker/static/gif.worker.js']).then((translationsWebapp) => {
+    i18nExtractLib.extractFromDirectory([argv['webapp-dir']], ['storybook-static', 'dist', 'node_modules', 'non_npm_dependencies', 'tests', 'components/gif_picker/static/gif.worker.js']).then((translationsWebapp) => {
         const webappKeys = new Set(Object.keys(translationsWebapp));
 
         for (const key of difference(currentWebappKeys, webappKeys)) {
