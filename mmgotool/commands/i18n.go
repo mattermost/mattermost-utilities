@@ -383,7 +383,7 @@ func extractByFuncName(name string, args []ast.Expr) *string {
 			return nil
 		}
 		return &key.Value
-	} else if name == "TranslateAsHtml" {
+	} else if name == "TranslateAsHTML" {
 		if len(args) < 2 {
 			return nil
 		}
