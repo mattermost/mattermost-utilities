@@ -78,14 +78,14 @@ var reHeaderMarkers = regexp.MustCompile(`\|[^|]+`)
 func th(jira []string) []string {
 	jiraString := strings.Join(jira, "\n")
 	groups := reTh.FindStringSubmatch(jiraString)
-	fmt.Printf("has groups?\n")
-	fmt.Printf("%+v\n", groups)
+	// fmt.Printf("has groups?\n")
+	// fmt.Printf("%+v\n", groups)
 	if len(groups) < 2 {
 		return jira
 	}
-	fmt.Printf("has groups yay\n")
+	// fmt.Printf("has groups yay\n")
 	singleBarred := reHeaderSeparator.ReplaceAllString(groups[1], "|")
-	fmt.Printf("singleBarred: %q\n", singleBarred)
+	// fmt.Printf("singleBarred: %q\n", singleBarred)
 	headerMarkers := reHeaderMarkers.ReplaceAllString(singleBarred, "| --- ")
 
 	return strings.Split("\n"+singleBarred+"\n"+headerMarkers, "\n")
