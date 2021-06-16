@@ -132,7 +132,6 @@ func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []stri
 			continue
 		}
 		logs += fmt.Sprintf("Created github issue for the jira issue %s here: %s\n", key, *newIssue.HTMLURL)
-		// at line 51 ish
 	}
 
 	return logs

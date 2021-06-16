@@ -76,15 +76,13 @@ func createGithubCmdF(command *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.New("invalid dry-run parameter")
 	}
-	debug, err := command.Flags().GetBool("dry-run")
+	debug, err := command.Flags().GetBool("debug")
 	if err != nil {
 		return errors.New("invalid debug parameter")
 	}
 
 	jiraBasicAuth := jira.MakeBasicAuthStr(jiraUsername, jiraToken)
 	jiraIssues, err := jira.SearchByNumber(jiraBasicAuth, debug, args)
-	fmt.Printf("ISSUES %+v\n", jiraIssues)
-	fmt.Printf("err %+v\n", err)
 	if err != nil {
 		return errors.New("Error searching jira issues by number: " + err.Error())
 	}

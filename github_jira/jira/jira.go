@@ -96,8 +96,9 @@ func SearchByNumber(basicAuth string, debug bool, issueNumbers []string) ([]Issu
 	return search(basicAuth, debug, jql, len(issueNumbers), []string{"summary", "description"})
 }
 
-func StatusSearch(basicAuth string, debug bool, issueNumbers []string) ([]Issue, error) {
-	jql := "project = MM AND status in (Open, Reopened) AND fixversion = \"Help Wanted\" AND \"GITHUB ISSUE\" IS EMPTY AND type != EPIC"
+func SearchByStatus(basicAuth string, debug bool) ([]Issue, error) {
+	statuses := strings.Join([]string{"Open", "Reopened"}, ", ")
+	jql := fmt.Sprintf("project = MM AND status in (%s) AND fixversion = \"Help Wanted\" AND \"GITHUB ISSUE\" IS EMPTY AND type != EPIC", statuses)
 	return search(basicAuth, debug, jql, 100, []string{"summary", "description"})
 }
 
