@@ -49,29 +49,29 @@ func search(basicAuth string, debug bool, jql string, maxResults int, fields []s
 	}
 	bodyReader, err := json.Marshal(searchBody)
 	if err != nil {
-		return nil, errors.Wrap(err, "error searching jira")
+		return nil, errors.Wrap(err, "searching jira")
 	}
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/rest/api/2/search", mattermostAtlassianUrl), bytes.NewReader(bodyReader))
 
 	if err != nil {
-		return nil, errors.Wrap(err, "error searching jira")
+		return nil, errors.Wrap(err, "searching jira")
 	}
 	req.Header.Set("Authorization", basicAuth)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, errors.Wrap(err, "error searching jira")
+		return nil, errors.Wrap(err, "searching jira")
 	}
 
 	defer resp.Body.Close()
 	respBytes, err := io.ReadAll(resp.Body)
 
 	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("error searching jira, status code %d with text %s", resp.StatusCode, string(respBytes))
+		return nil, fmt.Errorf("searching jira, status code %d with text %s", resp.StatusCode, string(respBytes))
 	}
 
 	if err != nil {
-		return nil, errors.Wrap(err, "error parsing jira search results")
+		return nil, errors.Wrap(err, "parsing jira search results")
 	}
 
 	if debug {
@@ -81,7 +81,7 @@ func search(basicAuth string, debug bool, jql string, maxResults int, fields []s
 	var issues []Issue
 	err = json.Unmarshal(respBytes, &issues)
 	if err != nil {
-		return nil, errors.Wrap(err, "error parsing jira search results")
+		return nil, errors.Wrap(err, "parsing jira search results")
 	}
 
 	return issues, nil
@@ -107,17 +107,17 @@ func LinkToGithub(ghUrl, jiraKey, basicAuth string) error {
 	jiraFields := customFields{Fields: map[string]string{"customfield_11106": ghUrl}}
 	jiraFieldsReader, err := json.Marshal(jiraFields)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("error creating request for jira issue %s.", jiraKey))
+		return errors.Wrap(err, fmt.Sprintf("creating request body for jira issue %s.", jiraKey))
 	}
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/rest/api/3/issue/%s", mattermostAtlassianUrl, jiraKey), bytes.NewReader(jiraFieldsReader))
 	req.Header.Set("Authorization", basicAuth)
 
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("error creating request for jira issue %s.", jiraKey))
+		return errors.Wrap(err, fmt.Sprintf("creating request for jira issue %s.", jiraKey))
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("Unable to update jira issue %s", jiraKey))
+		return errors.Wrap(err, fmt.Sprintf("unable to update jira issue %s", jiraKey))
 	}
 	defer resp.Body.Close()
 
@@ -126,7 +126,7 @@ func LinkToGithub(ghUrl, jiraKey, basicAuth string) error {
 		if err != nil {
 			respBytes = []byte("")
 		}
-		return fmt.Errorf("Unable to update jira issue %s, response: %d, with text %s", jiraKey, resp.StatusCode, string(respBytes))
+		return fmt.Errorf("unable to update jira issue %s, response: %d, with text %s", jiraKey, resp.StatusCode, string(respBytes))
 	}
 
 	return nil
