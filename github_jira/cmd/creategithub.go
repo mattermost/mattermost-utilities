@@ -24,7 +24,7 @@ func init() {
 	createGithubCmd.MarkFlagRequired("jira-username")
 	createGithubCmd.Flags().StringP("github-token", "g", "", "The token used to authenticate the user against Github.")
 	createGithubCmd.MarkFlagRequired("github-token")
-	createGithubCmd.Flags().StringP("repo", "r", "", "The repository which contains the issues. E.g. mattermost/mattermost-server")
+	createGithubCmd.Flags().StringP("repo", "r", "mattermost/mattermost-server", "The repository which contains the issues. E.g. mattermost/mattermost-server")
 	createGithubCmd.MarkFlagRequired("repo")
 	createGithubCmd.Flags().StringSliceP("labels", "l", []string{}, "The labels to set to the issues")
 	createGithubCmd.MarkFlagRequired("labels")
@@ -34,31 +34,20 @@ func init() {
 	RootCmd.AddCommand(createGithubCmd)
 }
 
-func getStr(command *cobra.Command, name string) (string, error) {
-	str, err := command.Flags().GetString(name)
-	if err != nil {
-		return "", errors.New(fmt.Sprintf("invalid %s parameter", name))
-	}
-	if str == "" {
-		return "", errors.New(fmt.Sprintf("expected %s to not be empty", name))
-	}
-	return str, nil
-}
-
 func createGithubCmdF(command *cobra.Command, args []string) error {
-	jiraUsername, err := getStr(command, "jira-username")
+	jiraUsername, err := getNonEmptyString(command, "jira-username")
 	if err != nil {
 		return err
 	}
-	jiraToken, err := getStr(command, "jira-token")
+	jiraToken, err := getNonEmptyString(command, "jira-token")
 	if err != nil {
 		return err
 	}
-	ghToken, err := getStr(command, "github-token")
+	ghToken, err := getNonEmptyString(command, "github-token")
 	if err != nil {
 		return err
 	}
-	repo, err := getStr(command, "repo")
+	repo, err := getNonEmptyString(command, "repo")
 	if err != nil {
 		return err
 	}
@@ -67,10 +56,9 @@ func createGithubCmdF(command *cobra.Command, args []string) error {
 		return err
 	}
 
-	// TODO: Should at least one label be required?
-	labels, err := command.Flags().GetStringSlice("labels")
+	labels, err := getNonEmptyStringSlice(command, "labels")
 	if err != nil {
-		return errors.New("invalid labels parameter")
+		return err
 	}
 	dryRun, err := command.Flags().GetBool("dry-run")
 	if err != nil {
@@ -93,7 +81,13 @@ func createGithubCmdF(command *cobra.Command, args []string) error {
 			fmt.Printf("%+v\n", issue)
 		}
 	}
-	fmt.Println(github.CreateIssues(jiraBasicAuth, ghToken, ghRepo, labels, jiraIssues, dryRun))
 
-	return nil
+	outcome, err := github.CreateIssues(jiraBasicAuth, ghToken, ghRepo, labels, jiraIssues, dryRun)
+
+	if err != nil {
+		fmt.Printf("Failed to create issues: %v\n", err)
+	}
+	fmt.Println(outcome.AsTables())
+
+	return err
 }

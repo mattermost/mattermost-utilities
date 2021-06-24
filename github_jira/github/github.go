@@ -3,16 +3,15 @@ package github
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/google/go-github/v35/github"
 	"github.com/mattermost/mattermost-utilities/github_jira/jira"
-	"github.com/mattermost/mattermost-utilities/github_jira/verbiages"
 	"golang.org/x/oauth2"
 )
 
@@ -32,7 +31,7 @@ func has(needle string, haystack []string) bool {
 func ParseRepo(repoStr string) (repo, error) {
 	ownerAndRepo := strings.Split(repoStr, "/")
 	if len(ownerAndRepo) != 2 {
-		return repo{}, errors.New(fmt.Sprintf(`Expected repo to be of form "<owner>/<repo>", but got %s`, repoStr))
+		return repo{}, fmt.Errorf(`Expected repo to be of form "<owner>/<repo>", but got %s`, repoStr)
 	}
 	return repo{
 		owner: ownerAndRepo[0],
@@ -45,8 +44,56 @@ type repo struct {
 	repo  string
 }
 
-func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []string, jiraIssues []jira.Issue, dryRun bool) string {
-	logs := ""
+type LinkedIssue struct {
+	JiraKey     string
+	GithubIssue github.Issue
+}
+
+type FailedLink struct {
+	JiraKey string
+	Message string
+}
+
+type CreateOutcome struct {
+	LinkedIssues []LinkedIssue
+	FailedLinks  []FailedLink
+}
+
+func (o *CreateOutcome) AsTables() string {
+	table := ""
+	keyHeader := "Jira Key"
+	keyHeaderLength := strconv.Itoa(len(keyHeader))
+
+	if numCreated := len(o.LinkedIssues); numCreated > 0 {
+		table += fmt.Sprintf(`Created %d github issues:
+%s | Github URL
+---------------------
+`, numCreated, keyHeader)
+
+		for _, linkedIssue := range o.LinkedIssues {
+			table += fmt.Sprintf("%"+keyHeaderLength+"s | %s\n", linkedIssue.JiraKey, *linkedIssue.GithubIssue.HTMLURL)
+		}
+		table += "\n"
+	}
+	if numFailed := len(o.FailedLinks); numFailed > 0 {
+		table += fmt.Sprintf(`Failed creating %d github issues:
+%s | Error
+%s
+`, numFailed, keyHeader, strings.Repeat("-", len(keyHeader)+8))
+
+		for _, failure := range o.FailedLinks {
+			table += fmt.Sprintf("%"+keyHeaderLength+"s | %s\n", failure.JiraKey, failure.Message)
+		}
+		table += "\n"
+	}
+	return table
+}
+
+func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []string, jiraIssues []jira.Issue, dryRun bool) (CreateOutcome, error) {
+	outcome := CreateOutcome{
+		LinkedIssues: []LinkedIssue{},
+		FailedLinks:  []FailedLink{},
+	}
 
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
@@ -58,8 +105,7 @@ func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []stri
 
 	r, _, err := client.Repositories.Get(ctx, repo.owner, repo.repo)
 	if err != nil {
-		logs += fmt.Sprintf("could not get %s repo: %s\n", repo, err.Error())
-		return logs
+		return outcome, err
 	}
 
 	// ListTags
@@ -67,35 +113,30 @@ func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []stri
 	httpClient := &http.Client{}
 	req, err := http.NewRequest("GET", *r.LabelsURL, nil)
 	if err != nil {
-		logs += fmt.Sprintf("could not get %s repo labels: %s\n", repo, err.Error())
-		return logs
+		return outcome, err
 	}
 	resp, err := httpClient.Do(req)
 
 	if err != nil {
-		logs += fmt.Sprintf("could not get %s repo labels: %s\n", repo, err.Error())
-		return logs
+		return outcome, err
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
-		logs += fmt.Sprintf("could not get %s repo labels: %s\n", repo, err.Error())
-		return logs
+		return outcome, err
 	}
 
 	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logs += fmt.Sprintf("could not read %s repo labels: %s\n", repo, err.Error())
-		return logs
+		return outcome, err
 	}
 
 	var candidateLabels []label
 	err = json.Unmarshal(respBytes, &candidateLabels)
 
 	if err != nil {
-		logs += fmt.Sprintf("could not read %s repo labels: %s\n", repo, err.Error())
-		return logs
+		return outcome, err
 	}
 
 	for _, label := range candidateLabels {
@@ -112,7 +153,7 @@ func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []stri
 		title := issue.Fields.Summary
 		key := issue.Key
 		markdownDescription := jira.ToMarkdown(strings.Split(issue.Fields.Description, "\n"))
-		description := strings.Join(markdownDescription, "\n") + "\n\n" + strings.Replace(verbiages.TemplateContributing, "{{TICKET}}", key, 1)
+		description := strings.Join(markdownDescription, "\n") + "\n\n" + strings.Replace(templateContributing, "{{TICKET}}", key, 1)
 
 		if dryRun {
 			fmt.Printf("------\n%s\n%s\n\n%s\n", title, strings.Repeat("=", len(title)), description)
@@ -123,16 +164,28 @@ func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []stri
 		issueRequest := github.IssueRequest{}
 		newIssue, _, err := client.Issues.Create(ctx, repo.owner, repo.repo, &issueRequest)
 		if err != nil {
-			logs += fmt.Sprintf("Unable to create issue for jira issue %s. error: %s\n", key, err.Error())
+			outcome.FailedLinks = append(outcome.FailedLinks, FailedLink{
+				JiraKey: key,
+				Message: err.Error(),
+			})
 			continue
 		}
 		err = jira.LinkToGithub(*newIssue.HTMLURL, key, jiraBasicAuth)
 		if err != nil {
-			logs += err.Error() + "\n"
+			outcome.FailedLinks = append(outcome.FailedLinks, FailedLink{
+				JiraKey: key,
+				Message: err.Error(),
+			})
 			continue
 		}
-		logs += fmt.Sprintf("Created github issue for the jira issue %s here: %s\n", key, *newIssue.HTMLURL)
+		outcome.LinkedIssues = append(outcome.LinkedIssues, LinkedIssue{
+			JiraKey:     key,
+			GithubIssue: *newIssue,
+		})
 	}
 
-	return logs
+	if numFailures := len(outcome.FailedLinks); numFailures > 0 {
+		return outcome, fmt.Errorf("Failed creating %d issues", numFailures)
+	}
+	return outcome, nil
 }

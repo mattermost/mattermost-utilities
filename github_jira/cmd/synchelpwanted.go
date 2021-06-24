@@ -1,11 +1,8 @@
 package cmd
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 
 	"github.com/mattermost/mattermost-utilities/github_jira/github"
 	"github.com/mattermost/mattermost-utilities/github_jira/jira"
@@ -34,15 +31,15 @@ func init() {
 }
 
 func syncHelpWantedCmdF(command *cobra.Command, args []string) error {
-	jiraUsername, err := getStr(command, "jira-username")
+	jiraUsername, err := getNonEmptyString(command, "jira-username")
 	if err != nil {
 		return err
 	}
-	jiraToken, err := getStr(command, "jira-token")
+	jiraToken, err := getNonEmptyString(command, "jira-token")
 	if err != nil {
 		return err
 	}
-	ghToken, err := getStr(command, "github-token")
+	ghToken, err := getNonEmptyString(command, "github-token")
 	if err != nil {
 		return err
 	}
@@ -81,34 +78,19 @@ func syncHelpWantedCmdF(command *cobra.Command, args []string) error {
 		return nil
 	}
 
-	log := github.CreateIssues(jiraBasicAuth, ghToken, ghRepo, []string{"Help Wanted", "Up For Grabs"}, jiraIssues, dryRun)
+	outcome, err := github.CreateIssues(jiraBasicAuth, ghToken, ghRepo, []string{"Help Wanted", "Up For Grabs"}, jiraIssues, dryRun)
 
-	if log == "" {
-		return nil
+	outcomeToPrint := ""
+
+	if err != nil {
+		outcomeToPrint += fmt.Sprintf("Failed to create issues: %v\n", err)
 	}
+	outcomeToPrint += outcome.AsTables()
 
 	if webhookUrl == "" {
-		fmt.Println(log)
-		return nil
-	}
-
-	msg, err := json.Marshal(map[string]string{"text": log})
-	if err != nil {
-		fmt.Printf("Unable to send log to webhook: %+v\n", err)
-		return nil
-	}
-	req, err := http.NewRequest("POST", webhookUrl, bytes.NewReader(msg))
-	if err != nil {
-		fmt.Printf("Unable to send log to webhook: %+v\n", err)
-		return nil
-	}
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Printf("Error sending log %s\n", err)
-	}
-	if resp.StatusCode >= 400 {
-		fmt.Printf("Sending log failed with status code %d\n", resp.StatusCode)
+		fmt.Println(outcomeToPrint)
+	} else {
+		sendWebhookMessage(webhookUrl, outcomeToPrint)
 	}
 
 	return nil

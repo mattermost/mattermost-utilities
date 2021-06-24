@@ -2,6 +2,7 @@ package github
 
 import (
 	"fmt"
+	"github.com/google/go-github/v35/github"
 	"testing"
 )
 
@@ -33,5 +34,29 @@ func Test_ParseRepoEmpty(t *testing.T) {
 	r, err := ParseRepo(repoStr)
 	if err == nil {
 		t.Errorf("Expected to fail parsing repo, but got owner %s and repo %s", r.owner, r.repo)
+	}
+}
+
+func Test_ReportPrint(t *testing.T) {
+	expected := "asdf"
+	htmlUrl := "https://github.com/mattermost/mattermost-server/issues/4321"
+	(&CreateOutcome{
+		LinkedIssues: []LinkedIssue{
+			{
+				JiraKey: "MM-12345",
+				GithubIssue: github.Issue{
+					HTMLURL: &htmlUrl,
+				},
+			},
+		},
+		FailedLinks: []FailedLink{
+			{
+				JiraKey: "MM-12345",
+				Message: "failure to create issue",
+			},
+		},
+	}).Print()
+	if "" != expected {
+		t.Errorf("adsf")
 	}
 }
