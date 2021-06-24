@@ -72,7 +72,7 @@ func createGithubCmdF(command *cobra.Command, args []string) error {
 	jiraBasicAuth := jira.MakeBasicAuthStr(jiraUsername, jiraToken)
 	jiraIssues, err := jira.SearchByNumber(jiraBasicAuth, debug, args)
 	if err != nil {
-		return errors.New("searching jira: " + err.Error())
+		return fmt.Errorf("searching jira: %v", err)
 	}
 
 	if debug {

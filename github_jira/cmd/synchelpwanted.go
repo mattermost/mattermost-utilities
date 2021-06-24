@@ -64,7 +64,7 @@ func syncHelpWantedCmdF(command *cobra.Command, args []string) error {
 	jiraBasicAuth := jira.MakeBasicAuthStr(jiraUsername, jiraToken)
 	jiraIssues, err := jira.SearchByStatus(jiraBasicAuth, debug)
 	if err != nil {
-		return errors.New("Error searching jira issues by number: " + err.Error())
+		return fmt.Errorf("Error searching jira issues by number: %v", err)
 	}
 
 	if debug {
