@@ -1,0 +1,41 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: sync-helpwanted-tickets
+  namespace: sync-helpwanted-tickets
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  suspend: false
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: sync-helpwanted-tickets
+            # TODO: Will need to pick the version matching when this is released
+            image: mattermost/sync-helpwanted-tickets:1.1.0
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: synchelptickets
+                  key: GITHUB_TOKEN
+            - name: JIRA_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: synchelptickets
+                  key: JIRA_TOKEN
+            - name: JIRA_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: synchelptickets
+                  key: JIRA_USERNAME
+            - name: WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: synchelptickets
+                  key: WEBHOOK_URL
+          restartPolicy: Never
