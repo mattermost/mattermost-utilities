@@ -1,9 +1,11 @@
 import requests
 import click
 import pprint
+from datetime import datetime
 from requests.auth import HTTPBasicAuth
 
 from utils import create_github_issues
+
 
 @click.command()
 @click.option('--jira-token', '-j', prompt='Your Jira access token', help='The token used to authenticate the user against Jira.')
@@ -29,7 +31,13 @@ def cli(jira_username, jira_token, github_token, webhook_url, dry_run, debug):
 
     log = ""
     if len(issues) > 0:
-        log = create_github_issues(jira_username, jira_token, github_token, 'mattermost/mattermost-server', ['Help Wanted', 'Up For Grabs'], issues, dry_run)
+        labels = ['Help Wanted', 'Up For Grabs']
+
+        currentMonth = datetime.now().month
+        if currentMonth == 10:
+            labels.append('Hacktoberfest')
+
+        log = create_github_issues(jira_username, jira_token, github_token, 'mattermost/mattermost-server', labels, issues, dry_run)
 
     if log:
         if webhook_url:
