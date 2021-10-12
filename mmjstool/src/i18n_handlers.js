@@ -23,8 +23,18 @@ function getCurrentTranslationsWebapp(webappDir) {
     return JSON.parse(currentWebappTranslationsJson);
 }
 
+function getCurrentTranslationsWebappQA(webappDir) {
+    const currentWebappTranslationsJson = fs.readFileSync(path.join(webappDir, 'i18n', 'en_qa.json'));
+    return JSON.parse(currentWebappTranslationsJson);
+}
+
 function getCurrentTranslationsMobile(mobileDir) {
     const currentMobileTranslationsJson = fs.readFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', 'en.json'));
+    return JSON.parse(currentMobileTranslationsJson);
+}
+
+function getCurrentTranslationsMobileQA(mobileDir) {
+    const currentMobileTranslationsJson = fs.readFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', 'en_qa.json'));
     return JSON.parse(currentMobileTranslationsJson);
 }
 
@@ -33,6 +43,8 @@ export function i18nCheckWebapp(argv) {
 
     const currentTranslations = getCurrentTranslationsWebapp(webappDir);
     const currentWebappKeys = new Set(Object.keys(currentTranslations));
+    const currentTranslationsQA = getCurrentTranslationsWebappQA(webappDir);
+    const currentWebappKeysQA = new Set(Object.keys(currentTranslationsQA));
 
     i18nExtractLib.extractFromDirectory([argv['webapp-dir']], ['dist', 'node_modules', 'non_npm_dependencies', 'tests', 'components/gif_picker/static/gif.worker.js']).then((translationsWebapp) => {
         const webappKeys = new Set(Object.keys(translationsWebapp));
@@ -46,6 +58,16 @@ export function i18nCheckWebapp(argv) {
         for (const key of difference(webappKeys, currentWebappKeys)) {
             // eslint-disable-next-line no-console
             console.log('Added to webapp:', key);
+            changed = true;
+        }
+        for (const key of difference(currentWebappKeysQA, webappKeysQA)) {
+            // eslint-disable-next-line no-console
+            console.log('Removed from webapp QA:', key);
+            changed = true;
+        }
+        for (const key of difference(webappKeysQA, currentWebappKeysQA)) {
+            // eslint-disable-next-line no-console
+            console.log('Added to webapp QA:', key);
             changed = true;
         }
         if (changed) {
@@ -65,6 +87,8 @@ export function i18nCheckMobile(argv) {
 
     const currentTranslations = getCurrentTranslationsMobile(mobileDir);
     const currentMobileKeys = new Set(Object.keys(currentTranslations));
+    const currentTranslationsQA = getCurrentTranslationsMobileQA(mobileDir);
+    const currentMobileKeysQA = new Set(Object.keys(currentTranslationsQA));
 
     i18nExtractLib.extractFromDirectory([argv['mobile-dir'] + '/app', argv['mobile-dir'] + '/share_extension'], []).then((translationsMobile) => {
         const mobileKeys = new Set(Object.keys(translationsMobile));
@@ -76,6 +100,16 @@ export function i18nCheckMobile(argv) {
             changed = true;
         }
         for (const key of difference(mobileKeys, currentMobileKeys)) {
+            // eslint-disable-next-line no-console
+            console.log('Added to mobile:', key);
+            changed = true;
+        }
+        for (const key of difference(currentMobileKeysQA, mobileKeysQA)) {
+            // eslint-disable-next-line no-console
+            console.log('Removed from mobile:', key);
+            changed = true;
+        }
+        for (const key of difference(mobileKeysQA, currentMobileKeysQA)) {
             // eslint-disable-next-line no-console
             console.log('Added to mobile:', key);
             changed = true;
@@ -106,7 +140,9 @@ export function i18nExtractWebapp(argv) {
 
         const options = {ignoreCase: true, reverse: false, depth: 1};
         const sortedWebappTranslations = sortJson(currentTranslations, options);
+        const sortedWebappTranslationsQA = sortJson(translateToQA(currentTranslations), options);
         fs.writeFileSync(path.join(webappDir, 'i18n', 'en.json'), JSON.stringify(sortedWebappTranslations, null, 2) + '\n');
+        fs.writeFileSync(path.join(webappDir, 'i18n', 'en_qa.json'), JSON.stringify(sortedWebappTranslationsQA, null, 2) + '\n');
     });
 }
 
@@ -128,7 +164,9 @@ export function i18nExtractMobile(argv) {
 
         const options = {ignoreCase: true, reverse: false, depth: 1};
         const sortedMobileTranslations = sortJson(currentTranslations, options);
+        const sortedMobileTranslationsQA = sortJson(translateToQA(currentTranslations), options);
         fs.writeFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', 'en.json'), JSON.stringify(sortedMobileTranslations, null, 2) + '\n');
+        fs.writeFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', 'en_qa.json'), JSON.stringify(sortedMobileTranslationsQA, null, 2) + '\n');
     });
 }
 
@@ -193,9 +231,13 @@ export function i18nSplit(argv) {
 
             const options = {ignoreCase: true, reverse: false, depth: 1};
             const sortedWebappTranslations = sortJson(translationsWebappOutput, options);
+            const sortedWebappTranslationsQA = sortJson(i18nExtractLib.translateToQA(translationsWebappOutput), options);
             const sortedMobileTranslations = sortJson(translationsMobileOutput, options);
+            const sortedMobileTranslationsQA = sortJson(i18nExtractLib.translateToQA(translationsMobileOutput), options);
             fs.writeFileSync(path.join(webappDir, 'i18n', filename), JSON.stringify(sortedWebappTranslations, null, 2) + '\n');
+            fs.writeFileSync(path.join(webappDir, 'i18n', 'en_qa.json'), JSON.stringify(sortedWebappTranslationsQA, null, 2) + '\n');
             fs.writeFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', filename), JSON.stringify(sortedMobileTranslations, null, 2) + '\n');
+            fs.writeFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', 'en_qa.json'), JSON.stringify(sortedMobileTranslationsQA, null, 2) + '\n');
         }
     });
 }
@@ -210,9 +252,14 @@ export function i18nCheckEmptySrcWebapp(argv) {
     const webappDir = argv['webapp-dir'];
     const fPath = path.join(webappDir, 'i18n');
     const counter = countEmptyItems(fPath, 'en.json');
-    if (counter > 0) {
-        const msg = 'Found ' + counter + ' empty translations in ' + fPath + '/en.json\n';
-        console.info(msg);
+    const counterQA = countEmptyItems(fPath, 'en_qa.json');
+    if (counter > 0 || counterQA > 0) {
+        if (counter > 0) {
+            console.info('Found ' + counter + ' empty translations in ' + fPath + '/en.json\n');
+        }
+        if (counterQA > 0) {
+            console.info('Found ' + counterQA + ' empty translations in ' + fPath + '/en_qa.json\n');
+        }
         return 1;
     }
     return 0;
@@ -222,9 +269,14 @@ export function i18nCheckEmptySrcMobile(argv) {
     const mobileDir = argv['mobile-dir'];
     const fPath = path.join(mobileDir, 'assets', 'base', 'i18n');
     const counter = countEmptyItems(fPath, 'en.json');
-    if (counter > 0) {
-        const msg = 'Found ' + counter + ' empty translations in ' + fPath + '/en.json\n';
-        console.info(msg);
+    const counterQA = countEmptyItems(fPath, 'en_qa.json');
+    if (counter > 0 || counterQA > 0) {
+        if (counter > 0) {
+            console.info('Found ' + counter + ' empty translations in ' + fPath + '/en.json\n');
+        }
+        if (counterQA > 0) {
+            console.info('Found ' + counterQA + ' empty translations in ' + fPath + '/en_qa.json\n');
+        }
         return 1;
     }
     return 0;

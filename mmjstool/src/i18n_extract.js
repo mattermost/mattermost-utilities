@@ -140,3 +140,58 @@ function extractFromFile(path) {
     });
     return translations;
 }
+
+export function translateToQA(translations) {
+    qa = {};
+    for (const key of translations) {
+        let translation = translations[key];
+        for (let i = translation.length; i >= 0; i--) {
+            switch (translation[i]) {
+                case 'a':
+                    translation[i] = 'á'
+                    break;
+                case 'A':
+                    translation[i] = 'Á'
+                    break;
+                case 'e':
+                    translation[i] = 'é'
+                    break;
+                case 'E':
+                    translation[i] = 'É'
+                    break;
+                case 'i':
+                    translation[i] = 'í'
+                    break;
+                case 'I':
+                    translation[i] = 'Í'
+                    break;
+                case 'o':
+                    translation[i] = 'ó'
+                    break;
+                case 'O':
+                    translation[i] = 'Ó'
+                    break;
+                case 'u':
+                    translation[i] = 'ú'
+                    break;
+                case 'U':
+                    translation[i] = 'Ú'
+                    break;
+                case 'n':
+                    translation[i] = 'ñ'
+                    break;
+                case 'N':
+                    translation[i] = 'Ñ'
+                    break;
+                case '?':
+                    translation[i] = '¿'
+                    break;
+                case '!':
+                    translation[i] = '¡'
+                    break;
+            }
+        }
+        qa[key] = translation
+    }
+    return qa
+}
