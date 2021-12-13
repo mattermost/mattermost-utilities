@@ -7,7 +7,7 @@ const fs = require('fs');
 
 const FileHound = require('filehound');
 
-const Parser = require('flow-parser');
+import {parse} from '@typescript-eslint/typescript-estree';
 const walk = require('estree-walk');
 
 const translatableComponents = {
@@ -57,10 +57,9 @@ function extractFromFile(path) {
     const translations = {};
 
     var code = fs.readFileSync(path, 'utf-8');
-    const ast = Parser.parse(code, {
-        esproposal_class_static_fields: true,
-        esproposal_class_instance_fields: true,
-        esproposal_optional_chaining: true,
+    const ast = parse(code, {
+        filePath: path,
+        jsx: path.endsWith('.tsx') || path.endsWith('.jsx'),
     });
 
     walk(ast, {
