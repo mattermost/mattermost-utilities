@@ -8,6 +8,7 @@ const webpack = require('webpack');
 module.exports = {
     target: 'node',
     entry: './mmjstool/src/index.js',
+    mode: 'production',
     output: {
         path: path.resolve(__dirname, 'bin'),
         filename: 'mmjstool',
