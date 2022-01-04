@@ -1,10 +1,14 @@
 {
   "extends": [
-    "./node_modules/eslint-config-mattermost/configs/.eslintrc.json"
+    "./node_modules/eslint-plugin-mattermost/configs/.eslintrc.json"
   ],
   "plugins": [
     "import"
   ],
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "requireConfigFile": false
+  },
   "env": {
     "jest": true
   },
@@ -41,7 +45,10 @@
         "enforceConst": true,
         "detectObjects": true
       }
-    ]
+    ],
+    "@typescript-eslint/array-type": "off",
+    "@typescript-eslint/member-delimiter-style": "off",
+    "@typescript-eslint/type-annotation-spacing": "off"
   },
   "overrides": [
     {

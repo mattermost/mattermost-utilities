@@ -16,28 +16,30 @@
   },
   "author": "Jesús Espino <jesus.espino@mattermost.com>",
   "dependencies": {
-    "@typescript-eslint/typescript-estree": "5.7.0",
+    "@typescript-eslint/typescript-estree": "5.8.1",
     "estree-walk": "2.2.0",
-    "filehound": "1.16.5",
+    "filehound": "1.17.5",
     "sort-json": "2.0.0",
-    "webpack-cli": "^3.3.0",
-    "yargs": "12.0.5"
+    "webpack-cli": "4.9.1",
+    "yargs": "17.3.1"
   },
   "pkg": {
     "scripts": "mmjstool/**/*.js"
   },
   "devDependencies": {
-    "@babel/cli": "7.2.3",
-    "@babel/core": "7.2.2",
-    "@babel/preset-env": "7.2.3",
-    "@babel/runtime": "7.2.0",
-    "babel-eslint": "10.0.1",
-    "eslint": "5.12.0",
-    "eslint-config-mattermost": "github:mattermost/eslint-config-mattermost",
-    "eslint-plugin-header": "2.0.0",
-    "eslint-plugin-import": "2.14.0",
-    "eslint-plugin-react": "7.12.3",
-    "pkg": "4.3.7",
-    "webpack": "^4.29.6"
+    "@babel/cli": "7.16.7",
+    "@babel/core": "7.16.7",
+    "@babel/eslint-parser": "7.16.5",
+    "@babel/preset-env": "7.16.7",
+    "@babel/runtime": "7.16.7",
+    "@typescript-eslint/eslint-plugin": "5.8.1",
+    "eslint": "8.6.0",
+    "eslint-import-resolver-webpack": "0.13.2",
+    "eslint-plugin-header": "3.1.1",
+    "eslint-plugin-import": "2.25.4",
+    "eslint-plugin-mattermost": "github:mattermost/eslint-plugin-mattermost#23abcf9988f7fa00d26929f11841aab7ccb16b2b",
+    "eslint-plugin-react": "7.28.0",
+    "pkg": "5.5.1",
+    "webpack": "5.65.0"
   }
 }

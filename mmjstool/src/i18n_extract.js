@@ -3,11 +3,12 @@
 
 /* eslint-disable no-console */
 
+import {parse} from '@typescript-eslint/typescript-estree';
+
 const fs = require('fs');
 
 const FileHound = require('filehound');
 
-import {parse} from '@typescript-eslint/typescript-estree';
 const walk = require('estree-walk');
 
 const translatableComponents = {

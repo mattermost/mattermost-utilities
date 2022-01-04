@@ -33,7 +33,7 @@ const ignored = yargs.
                             default: 'en.json',
                         });
                 },
-                i18nHandlers.i18nCombine
+                i18nHandlers.i18nCombine,
             ).
             command('split',
                 'Read a set of combined translation files, and split them in mattermost-server and mattermost-web translations',
@@ -143,5 +143,5 @@ const ignored = yargs.
                 describe: 'mobile source code directory',
                 default: '../mattermost-mobile',
             });
-    }, () => { /* empty function */ }
+    }, () => { /* empty function */ },
     ).argv;
