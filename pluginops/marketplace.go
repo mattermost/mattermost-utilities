@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v6/model"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
@@ -37,9 +37,9 @@ var marketplaceInstallCmd = &cobra.Command{
 			BuildEnterpriseReady: true,
 		}
 
-		plugins, resp := client.GetMarketplacePlugins(filter)
-		if resp.Error != nil {
-			log.WithError(resp.Error).Fatal("Failed to get marketplace plugin")
+		plugins, _, err := client.GetMarketplacePlugins(filter)
+		if err != nil {
+			log.WithError(err).Fatal("Failed to get marketplace plugin")
 		}
 
 		log.Info("Successfully fetched all plugins")
@@ -59,10 +59,10 @@ var marketplaceInstallCmd = &cobra.Command{
 
 				log.Infof("Requesting install of %s", p.Manifest.Name)
 
-				_, resp = client.InstallMarketplacePlugin(plugin)
-				if resp.Error != nil {
-					log.WithError(resp.Error).WithField("plugin", p.Manifest.Name).Error("Failed to install plugin")
-					return resp.Error
+				_, _, err = client.InstallMarketplacePlugin(plugin)
+				if err != nil {
+					log.WithError(err).WithField("plugin", p.Manifest.Name).Error("Failed to install plugin")
+					return err
 				}
 
 				i++
@@ -97,9 +97,9 @@ var marketplaceUnnstallCmd = &cobra.Command{
 			EnterprisePlugins: true,
 		}
 
-		plugins, resp := client.GetMarketplacePlugins(filter)
-		if resp.Error != nil {
-			log.WithError(resp.Error).Fatal("Failed to get marketplace plugin")
+		plugins, _, err := client.GetMarketplacePlugins(filter)
+		if err != nil {
+			log.WithError(err).Fatal("Failed to get marketplace plugin")
 		}
 
 		log.Info("Successfully fetched all plugins")
@@ -113,10 +113,10 @@ var marketplaceUnnstallCmd = &cobra.Command{
 
 			g.Go(func() error {
 				log.Infof("Requesting uninstall of %s", p.Manifest.Name)
-				_, resp = client.RemovePlugin(p.Manifest.Id)
-				if resp.Error != nil {
-					log.WithError(resp.Error).WithField("plugin", p.Manifest.Name).Error("Failed to uninstall plugin")
-					return resp.Error
+				_, err := client.RemovePlugin(p.Manifest.Id)
+				if err != nil {
+					log.WithError(err).WithField("plugin", p.Manifest.Name).Error("Failed to uninstall plugin")
+					return err
 				}
 
 				i++

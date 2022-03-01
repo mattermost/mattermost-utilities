@@ -7,13 +7,13 @@ import (
 	"net"
 	"os"
 
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v6/model"
 )
 
 func getClient() (*model.Client4, error) {
 	socketPath := os.Getenv("MM_LOCALSOCKETPATH")
 	if socketPath == "" {
-		socketPath = model.LOCAL_MODE_SOCKET_PATH
+		socketPath = model.LocalModeSocketPath
 	}
 
 	client, connected := getUnixClient(socketPath)
@@ -46,10 +46,11 @@ func getClient() (*model.Client4, error) {
 	if adminUsername != "" && adminPassword != "" {
 		client := model.NewAPIv4Client(siteURL)
 		log.Printf("Authenticating as %s against %s.", adminUsername, siteURL)
-		_, resp := client.Login(adminUsername, adminPassword)
-		if resp.Error != nil {
-			return nil, fmt.Errorf("failed to login as %s: %w", adminUsername, resp.Error)
+		_, _, err := client.Login(adminUsername, adminPassword)
+		if err != nil {
+			return nil, fmt.Errorf("failed to login as %s: %w", adminUsername, err)
 		}
+
 		return client, nil
 	}
 
