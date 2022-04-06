@@ -76,11 +76,8 @@ func releaseVersion() error {
 	log.Info("Running \"make apply\"")
 
 	cmd := exec.Command("make", []string{"apply"}...)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		fmt.Print(string(out))
-		return err
-	}
+	out, _ := cmd.CombinedOutput()
+	// This is allowed to fail as make apply isn't available on all plugins any longer
 	fmt.Print(string(out))
 
 	// TODO: Use library
