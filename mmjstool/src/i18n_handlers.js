@@ -121,7 +121,7 @@ export function i18nExtractDesktop(argv) {
     const currentTranslations = getCurrentTranslationsDesktop(desktopDir);
     const currentDesktopKeys = new Set(Object.keys(currentTranslations));
 
-    i18nExtractLib.extractFromDirectory([argv['desktop-dir'] + '/src'], ['assets', '.storybook', 'types']).then((translationsDesktop) => {
+    i18nExtractLib.extractFromDirectory([argv['desktop-dir'] + '/src'], ['assets', '.storybook', 'types', '*.test.js']).then((translationsDesktop) => {
         const desktopKeys = new Set(Object.keys(translationsDesktop));
 
         for (const key of difference(currentDesktopKeys, desktopKeys)) {
