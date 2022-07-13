@@ -23,6 +23,11 @@ function getCurrentTranslationsWebapp(webappDir) {
     return JSON.parse(currentWebappTranslationsJson);
 }
 
+function getCurrentTranslationsDesktop(desktopDir) {
+    const currentDesktopTranslationsJson = fs.readFileSync(path.join(desktopDir, 'i18n', 'en.json'));
+    return JSON.parse(currentDesktopTranslationsJson);
+}
+
 function getCurrentTranslationsMobile(mobileDir) {
     const currentMobileTranslationsJson = fs.readFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', 'en.json'));
     return JSON.parse(currentMobileTranslationsJson);
@@ -107,6 +112,28 @@ export function i18nExtractWebapp(argv) {
         const options = {ignoreCase: true, reverse: false, depth: 1};
         const sortedWebappTranslations = sortJson(currentTranslations, options);
         fs.writeFileSync(path.join(webappDir, 'i18n', 'en.json'), JSON.stringify(sortedWebappTranslations, null, 2) + '\n');
+    });
+}
+
+export function i18nExtractDesktop(argv) {
+    const desktopDir = argv['desktop-dir'];
+
+    const currentTranslations = getCurrentTranslationsDesktop(desktopDir);
+    const currentDesktopKeys = new Set(Object.keys(currentTranslations));
+
+    i18nExtractLib.extractFromDirectory([argv['desktop-dir'] + '/src'], ['assets', '.storybook', 'types', /(.*)test.js/]).then((translationsDesktop) => {
+        const desktopKeys = new Set(Object.keys(translationsDesktop));
+
+        for (const key of difference(currentDesktopKeys, desktopKeys)) {
+            delete currentTranslations[key];
+        }
+        for (const key of difference(desktopKeys, currentDesktopKeys)) {
+            currentTranslations[key] = translationsDesktop[key];
+        }
+
+        const options = {ignoreCase: true, reverse: false, depth: 1};
+        const sortedDesktopTranslations = sortJson(currentTranslations, options);
+        fs.writeFileSync(path.join(desktopDir, 'i18n', 'en.json'), JSON.stringify(sortedDesktopTranslations, null, 2) + '\n');
     });
 }
 

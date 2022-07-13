@@ -19,6 +19,11 @@ const ignored = yargs.
                 () => { /* empty function */ },
                 i18nHandlers.i18nExtractWebapp,
             ).
+            command('extract-desktop',
+                'Read the source code, find all the translations string from mattermost-webapp and write them to the file desktop/i18n/en.json',
+                () => { /* empty function */ },
+                i18nHandlers.i18nExtractDesktop,
+            ).
             command('extract-mobile',
                 'Read the source code, find all the translations string from mattermost-mobile and write them to the file mattermost-mobile/assets/base/i18n/en.json.',
                 () => { /* empty function */ },
@@ -138,6 +143,10 @@ const ignored = yargs.
             option('webapp-dir', {
                 describe: 'webapp source code directory',
                 default: '../mattermost-webapp',
+            }).
+            option('desktop-dir', {
+                describe: 'desktop source code directory',
+                default: '../desktop',
             }).
             option('mobile-dir', {
                 describe: 'mobile source code directory',
