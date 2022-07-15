@@ -16,7 +16,7 @@
   },
   "author": "Jesús Espino <jesus.espino@mattermost.com>",
   "dependencies": {
-    "@typescript-eslint/typescript-estree": "5.8.1",
+    "@typescript-eslint/typescript-estree": "5.30.6",
     "estree-walk": "2.2.0",
     "filehound": "1.17.5",
     "sort-json": "2.0.0",
@@ -32,7 +32,7 @@
     "@babel/eslint-parser": "7.16.5",
     "@babel/preset-env": "7.16.7",
     "@babel/runtime": "7.16.7",
-    "@typescript-eslint/eslint-plugin": "5.8.1",
+    "@typescript-eslint/eslint-plugin": "5.30.6",
     "eslint": "8.6.0",
     "eslint-import-resolver-webpack": "0.13.2",
     "eslint-plugin-header": "3.1.1",
