@@ -12,16 +12,19 @@ import (
 	"go/parser"
 	"go/token"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 const enterpriseKeyPrefix = "ent."
+const untranslatedKey = "<untranslated>"
 
 type Translation struct {
 	Id          string      `json:"id"`
@@ -117,7 +120,7 @@ func extractSrcStrings(enterpriseDir, mattermostDir, portalDir string) map[strin
 		if strings.HasPrefix(p, path.Join(mattermostDir, "vendor")) {
 			return nil
 		}
-		return extractFromPath(p, info, err, &i18nStrings)
+		return extractFromPath(p, info, err, i18nStrings)
 	}
 	if portalDir != "" {
 		_ = filepath.Walk(portalDir, walkFunc)
@@ -159,8 +162,10 @@ func extractCmdF(command *cobra.Command, args []string) error {
 	}
 	i18nStrings := extractSrcStrings(enterpriseDir, mattermostDir, portalDir)
 	if !skipDynamic {
-		addDynamicallyGeneratedStrings(&i18nStrings)
+		addDynamicallyGeneratedStrings(i18nStrings)
 	}
+	// Delete any untranslated keys
+	delete(i18nStrings, untranslatedKey)
 	var i18nStringsList []string
 	for id := range i18nStrings {
 		i18nStringsList = append(i18nStringsList, id)
@@ -247,8 +252,10 @@ func checkCmdF(command *cobra.Command, args []string) error {
 	}
 	extractedSrcStrings := extractSrcStrings(enterpriseDir, mattermostDir, portalDir)
 	if !skipDynamic {
-		addDynamicallyGeneratedStrings(&extractedSrcStrings)
+		addDynamicallyGeneratedStrings(extractedSrcStrings)
 	}
+	// Delete any untranslated keys
+	delete(extractedSrcStrings, untranslatedKey)
 	var extractedList []string
 	for id := range extractedSrcStrings {
 		extractedList = append(extractedList, id)
@@ -289,49 +296,49 @@ func checkCmdF(command *cobra.Command, args []string) error {
 	return nil
 }
 
-func addDynamicallyGeneratedStrings(i18nStrings *map[string]bool) {
-	(*i18nStrings)["model.user.is_valid.pwd.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.pwd_lowercase.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.pwd_lowercase_number.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.pwd_lowercase_number_symbol.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.pwd_lowercase_symbol.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.pwd_lowercase_uppercase.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.pwd_lowercase_uppercase_number.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.pwd_lowercase_uppercase_number_symbol.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.pwd_lowercase_uppercase_symbol.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.pwd_number.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.pwd_number_symbol.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.pwd_symbol.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.pwd_uppercase.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.pwd_uppercase_number.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.pwd_uppercase_number_symbol.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.pwd_uppercase_symbol.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.id.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.create_at.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.update_at.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.username.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.email.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.nickname.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.position.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.first_name.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.last_name.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.auth_data.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.auth_data_type.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.auth_data_pwd.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.password_limit.app_error"] = true
-	(*i18nStrings)["model.user.is_valid.locale.app_error"] = true
-	(*i18nStrings)["January"] = true
-	(*i18nStrings)["February"] = true
-	(*i18nStrings)["March"] = true
-	(*i18nStrings)["April"] = true
-	(*i18nStrings)["May"] = true
-	(*i18nStrings)["June"] = true
-	(*i18nStrings)["July"] = true
-	(*i18nStrings)["August"] = true
-	(*i18nStrings)["September"] = true
-	(*i18nStrings)["October"] = true
-	(*i18nStrings)["November"] = true
-	(*i18nStrings)["December"] = true
+func addDynamicallyGeneratedStrings(i18nStrings map[string]bool) {
+	i18nStrings["model.user.is_valid.pwd.app_error"] = true
+	i18nStrings["model.user.is_valid.pwd_lowercase.app_error"] = true
+	i18nStrings["model.user.is_valid.pwd_lowercase_number.app_error"] = true
+	i18nStrings["model.user.is_valid.pwd_lowercase_number_symbol.app_error"] = true
+	i18nStrings["model.user.is_valid.pwd_lowercase_symbol.app_error"] = true
+	i18nStrings["model.user.is_valid.pwd_lowercase_uppercase.app_error"] = true
+	i18nStrings["model.user.is_valid.pwd_lowercase_uppercase_number.app_error"] = true
+	i18nStrings["model.user.is_valid.pwd_lowercase_uppercase_number_symbol.app_error"] = true
+	i18nStrings["model.user.is_valid.pwd_lowercase_uppercase_symbol.app_error"] = true
+	i18nStrings["model.user.is_valid.pwd_number.app_error"] = true
+	i18nStrings["model.user.is_valid.pwd_number_symbol.app_error"] = true
+	i18nStrings["model.user.is_valid.pwd_symbol.app_error"] = true
+	i18nStrings["model.user.is_valid.pwd_uppercase.app_error"] = true
+	i18nStrings["model.user.is_valid.pwd_uppercase_number.app_error"] = true
+	i18nStrings["model.user.is_valid.pwd_uppercase_number_symbol.app_error"] = true
+	i18nStrings["model.user.is_valid.pwd_uppercase_symbol.app_error"] = true
+	i18nStrings["model.user.is_valid.id.app_error"] = true
+	i18nStrings["model.user.is_valid.create_at.app_error"] = true
+	i18nStrings["model.user.is_valid.update_at.app_error"] = true
+	i18nStrings["model.user.is_valid.username.app_error"] = true
+	i18nStrings["model.user.is_valid.email.app_error"] = true
+	i18nStrings["model.user.is_valid.nickname.app_error"] = true
+	i18nStrings["model.user.is_valid.position.app_error"] = true
+	i18nStrings["model.user.is_valid.first_name.app_error"] = true
+	i18nStrings["model.user.is_valid.last_name.app_error"] = true
+	i18nStrings["model.user.is_valid.auth_data.app_error"] = true
+	i18nStrings["model.user.is_valid.auth_data_type.app_error"] = true
+	i18nStrings["model.user.is_valid.auth_data_pwd.app_error"] = true
+	i18nStrings["model.user.is_valid.password_limit.app_error"] = true
+	i18nStrings["model.user.is_valid.locale.app_error"] = true
+	i18nStrings["January"] = true
+	i18nStrings["February"] = true
+	i18nStrings["March"] = true
+	i18nStrings["April"] = true
+	i18nStrings["May"] = true
+	i18nStrings["June"] = true
+	i18nStrings["July"] = true
+	i18nStrings["August"] = true
+	i18nStrings["September"] = true
+	i18nStrings["October"] = true
+	i18nStrings["November"] = true
+	i18nStrings["December"] = true
 }
 
 func extractByFuncName(name string, args []ast.Expr) *string {
@@ -451,7 +458,7 @@ func extractForConstants(name string, valueNode ast.Expr) *string {
 
 }
 
-func extractFromPath(path string, info os.FileInfo, err error, i18nStrings *map[string]bool) error {
+func extractFromPath(path string, info os.FileInfo, err error, i18nStrings map[string]bool) error {
 	if strings.HasSuffix(path, "model/client4.go") {
 		return nil
 	}
@@ -512,7 +519,7 @@ func extractFromPath(path string, info os.FileInfo, err error, i18nStrings *map[
 					if id == nil {
 						continue
 					}
-					(*i18nStrings)[strings.Trim(*id, "\"")] = true
+					i18nStrings[strings.Trim(*id, "\"")] = true
 				}
 			}
 			return true
@@ -521,7 +528,7 @@ func extractFromPath(path string, info os.FileInfo, err error, i18nStrings *map[
 		}
 
 		if id != nil {
-			(*i18nStrings)[strings.Trim(*id, "\"")] = true
+			i18nStrings[strings.Trim(*id, "\"")] = true
 		}
 
 		return true
@@ -557,22 +564,33 @@ func checkEmptySrcCmdF(command *cobra.Command, args []string) error {
 	if err = json.Unmarshal(srcJSON, &items); err != nil {
 		return err
 	}
-	count := countEmptyItems(items)
-	if count > 0 {
-		msg := fmt.Sprintf("please check %v/en.json for empty translation strings, detected %v", translationDir, count)
-		return errors.New(msg)
+	err = countEmptyItems(items)
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
-func countEmptyItems(items []Item) int {
-	var count int
+func countEmptyItems(items []Item) error {
+	hasError := false
 	for _, t := range items {
-		if string(t.Translation) == "\"\"" {
-			count++
+		str := string(t.Translation)
+		if !strings.HasPrefix(str, "\"") {
+			continue
+		}
+		unquoted, err := strconv.Unquote(str)
+		if err != nil {
+			return fmt.Errorf("error unquoting translation for %s, %v", t.ID, err)
+		}
+		if strings.TrimSpace(unquoted) == "" {
+			log.Printf("Empty translation for %s. Please fix it.\n", t.ID)
+			hasError = true
 		}
 	}
-	return count
+	if hasError {
+		return errors.New("empty translations found")
+	}
+	return nil
 }
 
 func cleanEmptyCmdF(command *cobra.Command, args []string) error {
