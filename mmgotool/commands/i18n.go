@@ -12,10 +12,12 @@ import (
 	"go/parser"
 	"go/token"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -562,22 +564,33 @@ func checkEmptySrcCmdF(command *cobra.Command, args []string) error {
 	if err = json.Unmarshal(srcJSON, &items); err != nil {
 		return err
 	}
-	count := countEmptyItems(items)
-	if count > 0 {
-		msg := fmt.Sprintf("please check %v/en.json for empty translation strings, detected %v", translationDir, count)
-		return errors.New(msg)
+	err = countEmptyItems(items)
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
-func countEmptyItems(items []Item) int {
-	var count int
+func countEmptyItems(items []Item) error {
+	hasError := false
 	for _, t := range items {
-		if string(t.Translation) == "\"\"" {
-			count++
+		str := string(t.Translation)
+		if !strings.HasPrefix(str, "\"") {
+			continue
+		}
+		unquoted, err := strconv.Unquote(str)
+		if err != nil {
+			return fmt.Errorf("error unquoting translation for %s, %v", t.ID, err)
+		}
+		if strings.TrimSpace(unquoted) == "" {
+			log.Printf("Empty translation for %s. Please fix it.\n", t.ID)
+			hasError = true
 		}
 	}
-	return count
+	if hasError {
+		return errors.New("empty translations found")
+	}
+	return nil
 }
 
 func cleanEmptyCmdF(command *cobra.Command, args []string) error {
