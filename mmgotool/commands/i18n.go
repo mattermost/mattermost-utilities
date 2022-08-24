@@ -444,6 +444,7 @@ func extractForConstants(name string, valueNode ast.Expr) *string {
 		"MissingAccountError":          true,
 		"ExpiredLicenseError":          true,
 		"InvalidLicenseError":          true,
+		"NoTranslation":                true,
 	}
 
 	if _, ok := validConstants[name]; !ok {
