@@ -45,7 +45,6 @@ const (
 	gitPath    = "."
 )
 
-// bumpVersion
 func releaseVersion() error {
 	repo, err := git.PlainOpen(gitPath)
 	if err != nil {
