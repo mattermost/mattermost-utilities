@@ -11,4 +11,4 @@ query-filters:
 paths-ignore:
   - bin
   - '**/*_test.go'
-  - '**/*.test.*'
+  - '**/*.txt'
