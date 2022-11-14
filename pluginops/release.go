@@ -22,7 +22,15 @@ import (
 	"github.com/mattermost/mattermost-server/v6/model"
 )
 
+var (
+	yes         bool
+	releaseType string
+)
+
 func init() {
+	bumpVersionCmd.Flags().BoolVarP(&yes, "yes", "y", false, "Automatic yes to prompts; assume \"yes\" as answer to all prompts and run non-interactively.")
+	bumpVersionCmd.Flags().StringVar(&releaseType, "releaseType", "", "Define the kind of releaese to cut. Valid options are \"major\", \"minor\" and \"patch\".")
+
 	rootCmd.AddCommand(bumpVersionCmd)
 }
 
@@ -50,6 +58,10 @@ func releaseVersion() error {
 	repo, err := git.PlainOpen(gitPath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to access git repository at %q", gitPath)
+	}
+
+	if releaseType != "" && releaseType != "major" && releaseType != "minor" && releaseType != "patch" {
+		return errors.New("releaseType must be either of \"major\", \"minor\" and \"patch\".")
 	}
 
 	log.Info("Checking if repository is clean")
@@ -279,63 +291,76 @@ func bumpManifestVersion() (string, error) {
 
 	log.Infof("Current version is %s", oldVersion.String())
 
-	items := []string{
-		fmt.Sprintf("%s (Next Major)", newVersionMajor.FinalizeVersion()),
-		fmt.Sprintf("%s (Next Minor)", newVersionMinor.FinalizeVersion()),
-		fmt.Sprintf("%s (Next Patch)", newVersionPatch.FinalizeVersion()),
-	}
+	var newVersionString string
+	if releaseType != "" {
+		switch releaseType {
+		case "major":
+			newVersionString = newVersionMinor.FinalizeVersion()
+		case "minor":
+			newVersionString = newVersionMajor.FinalizeVersion()
+		case "patch":
+			newVersionString = newVersionPatch.FinalizeVersion()
+		default:
+			return "", errors.Errorf("Unkown release type %s", releaseType)
+		}
+	} else {
+		items := []string{
+			fmt.Sprintf("%s (Next Major)", newVersionMajor.FinalizeVersion()),
+			fmt.Sprintf("%s (Next Minor)", newVersionMinor.FinalizeVersion()),
+			fmt.Sprintf("%s (Next Patch)", newVersionPatch.FinalizeVersion()),
+		}
 
-	if len(oldVersion.Pre) > 0 {
-		items = append(items, fmt.Sprintf("%s (Next Stable Version)", oldVersion.FinalizeVersion()))
-	}
+		if len(oldVersion.Pre) > 0 {
+			items = append(items, fmt.Sprintf("%s (Next Stable Version)", oldVersion.FinalizeVersion()))
+		}
 
-	var result string
-	index := -1
+		var result string
+		index := -1
 
-	for index < 0 {
-		v := func(o string) error {
-			_, err := semver.Parse(o)
-			if err != nil {
-				return err
+		for index < 0 {
+			v := func(o string) error {
+				_, err := semver.Parse(o)
+				if err != nil {
+					return err
+				}
+
+				return nil
 			}
 
-			return nil
+			prompt := promptui.SelectWithAdd{
+				Label:    "To which version do you want to bump",
+				Items:    items,
+				AddLabel: "Custom version",
+				Validate: v,
+			}
+			index, result, err = prompt.Run()
+
+			if err != nil {
+				return "", errors.Wrap(err, "prompt failed")
+			}
+
+			if index == -1 {
+				items = append(items, result)
+			}
 		}
 
-		prompt := promptui.SelectWithAdd{
-			Label:    "To which version do you want to bump",
-			Items:    items,
-			AddLabel: "Custom version",
-			Validate: v,
-		}
-		index, result, err = prompt.Run()
-
-		if err != nil {
-			return "", errors.Wrap(err, "prompt failed")
-		}
-
-		if index == -1 {
-			items = append(items, result)
-		}
-	}
-
-	var newVersionString string
-	switch index {
-	// Custom version
-	case 0:
-		newVersionString = newVersionMajor.FinalizeVersion()
-	case 1:
-		newVersionString = newVersionMinor.FinalizeVersion()
-	case 2:
-		newVersionString = newVersionPatch.FinalizeVersion()
-	case 3:
-		if len(oldVersion.Pre) > 0 {
-			newVersionString = oldVersion.FinalizeVersion()
-		} else {
+		switch index {
+		// Custom version
+		case 0:
+			newVersionString = newVersionMajor.FinalizeVersion()
+		case 1:
+			newVersionString = newVersionMinor.FinalizeVersion()
+		case 2:
+			newVersionString = newVersionPatch.FinalizeVersion()
+		case 3:
+			if len(oldVersion.Pre) > 0 {
+				newVersionString = oldVersion.FinalizeVersion()
+			} else {
+				newVersionString = result
+			}
+		default:
 			newVersionString = result
 		}
-	default:
-		newVersionString = result
 	}
 
 	manifest.Version = newVersionString
@@ -356,6 +381,10 @@ func bumpManifestVersion() (string, error) {
 }
 
 func confirmPrompt(msg string) (bool, error) {
+	if yes {
+		return true, nil
+	}
+
 	prompt := promptui.Prompt{
 		Label:     msg,
 		IsConfirm: true,
