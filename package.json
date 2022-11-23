@@ -16,12 +16,13 @@
   },
   "author": "Jesús Espino <jesus.espino@mattermost.com>",
   "dependencies": {
-    "@typescript-eslint/typescript-estree": "5.8.1",
+    "@typescript-eslint/typescript-estree": "5.44.0",
     "estree-walk": "2.2.0",
     "filehound": "1.17.5",
     "sort-json": "2.0.0",
     "webpack-cli": "4.9.1",
-    "yargs": "17.3.1"
+    "yargs": "17.3.1",
+    "typescript": "4.7.4"
   },
   "pkg": {
     "scripts": "mmjstool/**/*.js"
@@ -40,6 +41,6 @@
     "eslint-plugin-mattermost": "github:mattermost/eslint-plugin-mattermost#23abcf9988f7fa00d26929f11841aab7ccb16b2b",
     "eslint-plugin-react": "7.28.0",
     "pkg": "5.5.1",
-    "webpack": "5.65.0"
+    "webpack": "5.74.0"
   }
 }
