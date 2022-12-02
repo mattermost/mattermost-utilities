@@ -1,7 +1,7 @@
 package main
 
 var coreLabels = pullRequest
-var communityPlugins = MergeLabels(coreLabels, []Label{securityReview})
+var communityPlugins = coreLabels
 var pluginLabelsWithoutHW = MergeLabels(coreLabels, issue, docs, plugin)
 var pluginLabels = MergeLabels(pluginLabelsWithoutHW, helpWanted)
 
@@ -57,16 +57,13 @@ var defaultMapping = map[string][]Label{
 	"standup-raven":                       communityPlugins,
 }
 
-var securityReview = Label{
-	"3: Security Review", "Review requested from Security Team", "1d76db",
-}
-
 // PR is the list of labels typically used on PRs. Use --
 var pullRequest = []Label{
 	{"1: PM Review", "Requires review by a product manager", "006b75"},
 	{"1: UX Review", "Requires review by a UX Designer", "7cdfe2"},
 	{"2: Dev Review", "Requires review by a core committer", "eb6420"},
 	{"3: QA Review", "Requires review by a QA tester", "7cdfe2"},
+	{"3: Security Review", "Review requested from Security Team", "1d76db"},
 	{"4: Reviews Complete", "All reviewers have approved the pull request", "0e8a16"},
 	{"AutoMerge", "Used by Mattermod to merge PR automatically", "b74533"},
 	{"Awaiting Submitter Action", "Blocked on the author", "b60205"},
