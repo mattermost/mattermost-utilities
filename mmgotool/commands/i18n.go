@@ -17,7 +17,6 @@ import (
 	"path"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -27,13 +26,13 @@ const enterpriseKeyPrefix = "ent."
 const untranslatedKey = "<untranslated>"
 
 type Translation struct {
-	Id          string      `json:"id"`
-	Translation interface{} `json:"translation"`
-}
-
-type Item struct {
-	ID          string          `json:"id"`
-	Translation json.RawMessage `json:"translation"`
+	Id    string `json:"id"`
+	Zero  string `json:"zero,omitempty"`
+	One   string `json:"one,omitempty"`
+	Two   string `json:"two,omitempty"`
+	Few   string `json:"few,omitempty"`
+	Many  string `json:"many,omitempty"`
+	Other string `json:"other,omitempty"`
 }
 
 var I18nCmd = &cobra.Command{
@@ -189,7 +188,7 @@ func extractCmdF(command *cobra.Command, args []string) error {
 
 	for _, translationKey := range i18nStringsList {
 		if _, hasKey := idx[translationKey]; !hasKey {
-			resultMap[translationKey] = Translation{Id: translationKey, Translation: ""}
+			resultMap[translationKey] = Translation{Id: translationKey, Other: ""}
 		}
 	}
 
@@ -561,7 +560,7 @@ func checkEmptySrcCmdF(command *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	var items []Item
+	var items []Translation
 	if err = json.Unmarshal(srcJSON, &items); err != nil {
 		return err
 	}
@@ -572,19 +571,21 @@ func checkEmptySrcCmdF(command *cobra.Command, args []string) error {
 	return nil
 }
 
-func countEmptyItems(items []Item) error {
+func isItemEmpty(t Translation) bool {
+	forms := []string{t.Zero, t.One, t.Two, t.Few, t.Many, t.Other}
+	for _, v := range forms {
+		if strings.TrimSpace(v) != "" {
+			return false
+		}
+	}
+	return true
+}
+
+func countEmptyItems(items []Translation) error {
 	hasError := false
 	for _, t := range items {
-		str := string(t.Translation)
-		if !strings.HasPrefix(str, "\"") {
-			continue
-		}
-		unquoted, err := strconv.Unquote(str)
-		if err != nil {
-			return fmt.Errorf("error unquoting translation for %s, %v", t.ID, err)
-		}
-		if strings.TrimSpace(unquoted) == "" {
-			log.Printf("Empty translation for %s. Please fix it.\n", t.ID)
+		if isItemEmpty(t) {
+			log.Printf("Empty translation for %s. Please fix it.\n", t.Id)
 			hasError = true
 		}
 	}
@@ -658,7 +659,7 @@ func clean(translationDir string, file string, dryRun bool, check bool) (*string
 		return nil, err
 	}
 
-	var oldList []Item
+	var oldList []Translation
 	if err = json.Unmarshal(oldJSON, &oldList); err != nil {
 		return nil, err
 	}
@@ -687,11 +688,11 @@ func clean(translationDir string, file string, dryRun bool, check bool) (*string
 	return &result, nil
 }
 
-func removeEmptyTranslations(oldList []Item) ([]Item, int) {
+func removeEmptyTranslations(oldList []Translation) ([]Translation, int) {
 	var count int
-	var newList []Item
+	var newList []Translation
 	for i, t := range oldList {
-		if string(t.Translation) != "\"\"" {
+		if !isItemEmpty((t)) {
 			newList = append(newList, oldList[i])
 		} else {
 			count++
@@ -705,7 +706,7 @@ func JSONMarshal(t interface{}) ([]byte, error) {
 	buffer := &bytes.Buffer{}
 	encoder := json.NewEncoder(buffer)
 	encoder.SetEscapeHTML(false)
-	encoder.SetIndent("", "    ")
+	encoder.SetIndent("", "  ")
 	err := encoder.Encode(t)
 	return buffer.Bytes(), err
 }
