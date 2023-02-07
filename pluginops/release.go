@@ -61,7 +61,7 @@ func releaseVersion() error {
 	}
 
 	if releaseType != "" && releaseType != "major" && releaseType != "minor" && releaseType != "patch" {
-		return errors.New("releaseType must be either of \"major\", \"minor\" and \"patch\".")
+		return errors.New("releaseType must be either \"major\", \"minor\" or \"patch\".")
 	}
 
 	log.Info("Checking if repository is clean")
