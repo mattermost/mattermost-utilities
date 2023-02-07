@@ -29,7 +29,7 @@ var (
 
 func init() {
 	bumpVersionCmd.Flags().BoolVarP(&yes, "yes", "y", false, "Automatic yes to prompts; assume \"yes\" as answer to all prompts and run non-interactively.")
-	bumpVersionCmd.Flags().StringVar(&releaseType, "releaseType", "", "Define the kind of releaese to cut. Valid options are \"major\", \"minor\" and \"patch\".")
+	bumpVersionCmd.Flags().StringVar(&releaseType, "releaseType", "", "Define the kind of release to cut. Valid options are \"major\", \"minor\" and \"patch\".")
 
 	rootCmd.AddCommand(bumpVersionCmd)
 }
