@@ -82,11 +82,10 @@ func releaseVersion() error {
 	// TODO: Use library
 	cmd = exec.Command("git", []string{"diff"}...)
 	out, err = cmd.CombinedOutput()
+	fmt.Print(string(out))
 	if err != nil {
-		fmt.Print(string(out))
 		return err
 	}
-	fmt.Print(string(out))
 
 	ok, err := confirmPrompt("Does the diff look good")
 	if err != nil {
@@ -174,11 +173,10 @@ func releaseVersion() error {
 	// Can't get push via library working
 	cmd = exec.Command("git", []string{"push", "--set-upstream", remoteName, branchName}...)
 	out, err = cmd.CombinedOutput()
+	fmt.Print(string(out))
 	if err != nil {
-		fmt.Print(string(out))
 		return err
 	}
-	fmt.Print(string(out))
 
 	orgName, repoName, err := GetRepoURL(remote.Config().URLs[0])
 	if err != nil {
