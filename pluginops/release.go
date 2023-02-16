@@ -53,7 +53,6 @@ const (
 	gitPath    = "."
 )
 
-// bumpVersion
 func releaseVersion() error {
 	repo, err := git.PlainOpen(gitPath)
 	if err != nil {
@@ -95,11 +94,10 @@ func releaseVersion() error {
 	// TODO: Use library
 	cmd = exec.Command("git", []string{"diff"}...)
 	out, err = cmd.CombinedOutput()
+	fmt.Print(string(out))
 	if err != nil {
-		fmt.Print(string(out))
 		return err
 	}
-	fmt.Print(string(out))
 
 	ok, err := confirmPrompt("Does the diff look good")
 	if err != nil {
@@ -184,15 +182,11 @@ func releaseVersion() error {
 
 	log.Infof("Pushing to %q", remoteName)
 
-	pushOptions := &git.PushOptions{
-		RemoteName: remoteName,
-	}
-	err = repo.Push(pushOptions)
+	// Can't get push via library working
+	cmd = exec.Command("git", []string{"push", "--set-upstream", remoteName, branchName}...)
+	out, err = cmd.CombinedOutput()
+	fmt.Print(string(out))
 	if err != nil {
-		if errors.Is(err, git.ErrNonFastForwardUpdate) {
-			return errors.New("Can't push to remote branch. Please check that the branch names doesn't collide.")
-		}
-
 		return err
 	}
 
@@ -215,7 +209,7 @@ func releaseVersion() error {
 		log.WithError(err).Debug("Failed to create GitHub client. Won't try to automatically set ticket link")
 	} else {
 		issueTitle := fmt.Sprintf("Release v%s", newVersion.FinalizeVersion())
-		query := fmt.Sprintf("state:open is:issue org:mattermost repo:repoName %s", issueTitle)
+		query := fmt.Sprintf("state:open is:issue org:mattermost repo:%s %s", repoName, issueTitle)
 		result, _, err := client.Search.Issues(context.Background(), query, nil)
 		if err != nil {
 			return err
@@ -228,6 +222,12 @@ func releaseVersion() error {
 			if len > 1 {
 				log.Warn("More then one issue found. Picking the first one")
 			}
+
+			for _, i := range result.Issues {
+				log.Debug("These issues have been found:")
+				log.Debug(*i.Title)
+			}
+
 			ticketLink = fmt.Sprintf("Part of %s", result.Issues[0].GetHTMLURL())
 		}
 	}
@@ -250,7 +250,12 @@ func releaseVersion() error {
 	}
 
 	if ok {
-		// TODO: This doesn't work right now
+		err = repo.Storer.RemoveReference(nameRef)
+		if err != nil {
+			return err
+		}
+
+		log.Printf("branchName: %#+v\n", branchName)
 		err = repo.DeleteBranch(branchName)
 		if err != nil {
 			return err
