@@ -503,6 +503,7 @@ func extractFromPath(path string, info os.FileInfo, err error, i18nStrings map[s
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, "", src, 0)
 	if err != nil {
+		fmt.Printf("error parsing source: %s\n", path)
 		panic(err)
 	}
 
