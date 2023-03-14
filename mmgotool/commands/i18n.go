@@ -76,24 +76,28 @@ var CleanEmptyCmd = &cobra.Command{
 func init() {
 	ExtractCmd.Flags().Bool("skip-dynamic", false, "Whether to skip dynamically added translations")
 	ExtractCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
-	ExtractCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
-	ExtractCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
+	ExtractCmd.Flags().String("enterprise-dir", "../../enterprise", "Path to folder with the Mattermost enterprise source code")
+	ExtractCmd.Flags().String("server-dir", "./", "Path to folder with the Mattermost server source code")
+	ExtractCmd.Flags().String("model-dir", "../model", "Path to folder with the Mattermost model package source code")
+	ExtractCmd.Flags().String("plugin-dir", "../plugin", "Path to folder with the Mattermost plugin package source code")
 	ExtractCmd.Flags().Bool("contributor", false, "Allows contributors safely extract translations from source code without removing enterprise messages keys")
 
 	CheckCmd.Flags().Bool("skip-dynamic", false, "Whether to skip dynamically added translations")
 	CheckCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
-	CheckCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
-	CheckCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
+	CheckCmd.Flags().String("enterprise-dir", "../../enterprise", "Path to folder with the Mattermost enterprise source code")
+	CheckCmd.Flags().String("server-dir", "./", "Path to folder with the Mattermost server source code")
+	CheckCmd.Flags().String("model-dir", "../model", "Path to folder with the Mattermost model package source code")
+	CheckCmd.Flags().String("plugin-dir", "../plugin", "Path to folder with the Mattermost plugin package source code")
 
 	CheckEmptySrcCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
-	CheckEmptySrcCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
-	CheckEmptySrcCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
+	CheckEmptySrcCmd.Flags().String("enterprise-dir", "../../enterprise", "Path to folder with the Mattermost enterprise source code")
+	CheckEmptySrcCmd.Flags().String("server-dir", "./", "Path to folder with the Mattermost server source code")
 
 	CleanEmptyCmd.Flags().Bool("dry-run", false, "Run without applying changes")
 	CleanEmptyCmd.Flags().Bool("check", false, "Throw exit code on empty translation strings")
 	CleanEmptyCmd.Flags().String("portal-dir", "../customer-web-server", "Path to folder with the Mattermost Customer Portal source code")
-	CleanEmptyCmd.Flags().String("enterprise-dir", "../enterprise", "Path to folder with the Mattermost enterprise source code")
-	CleanEmptyCmd.Flags().String("mattermost-dir", "./", "Path to folder with the Mattermost source code")
+	CleanEmptyCmd.Flags().String("enterprise-dir", "../../enterprise", "Path to folder with the Mattermost enterprise source code")
+	CleanEmptyCmd.Flags().String("server-dir", "./", "Path to folder with the Mattermost server source code")
 
 	I18nCmd.AddCommand(
 		ExtractCmd,
@@ -114,7 +118,7 @@ func getBaseFileSrcStrings(mattermostDir string) ([]Translation, error) {
 	return translations, nil
 }
 
-func extractSrcStrings(enterpriseDir, mattermostDir, portalDir string) map[string]bool {
+func extractSrcStrings(enterpriseDir, mattermostDir, modelDir, pluginDir, portalDir string) map[string]bool {
 	i18nStrings := map[string]bool{}
 	walkFunc := func(p string, info os.FileInfo, err error) error {
 		if strings.HasPrefix(p, path.Join(mattermostDir, "vendor")) {
@@ -127,6 +131,8 @@ func extractSrcStrings(enterpriseDir, mattermostDir, portalDir string) map[strin
 	} else {
 		_ = filepath.Walk(mattermostDir, walkFunc)
 		_ = filepath.Walk(enterpriseDir, walkFunc)
+		_ = filepath.Walk(modelDir, walkFunc)
+		_ = filepath.Walk(pluginDir, walkFunc)
 	}
 	return i18nStrings
 }
@@ -140,9 +146,9 @@ func extractCmdF(command *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.New("invalid enterprise-dir parameter")
 	}
-	mattermostDir, err := command.Flags().GetString("mattermost-dir")
+	mattermostDir, err := command.Flags().GetString("server-dir")
 	if err != nil {
-		return errors.New("invalid mattermost-dir parameter")
+		return errors.New("invalid server-dir parameter")
 	}
 	contributorMode, err := command.Flags().GetBool("contributor")
 	if err != nil {
@@ -152,15 +158,23 @@ func extractCmdF(command *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.New("invalid portal-dir parameter")
 	}
+	modelDir, err := command.Flags().GetString("model-dir")
+	if err != nil {
+		return errors.New("invalid model-dir parameter")
+	}
+	pluginDir, err := command.Flags().GetString("plugin-dir")
+	if err != nil {
+		return errors.New("invalid plugin-dir parameter")
+	}
 	translationDir := mattermostDir
 	if portalDir != "" {
 		if enterpriseDir != "" || mattermostDir != "" {
-			return errors.New("please specify EITHER portal-dir or enterprise-dir/mattermost-dir")
+			return errors.New("please specify EITHER portal-dir or enterprise-dir/server-dir")
 		}
 		skipDynamic = true // dynamics are not needed for portal
 		translationDir = portalDir
 	}
-	i18nStrings := extractSrcStrings(enterpriseDir, mattermostDir, portalDir)
+	i18nStrings := extractSrcStrings(enterpriseDir, mattermostDir, modelDir, pluginDir, portalDir)
 	if !skipDynamic {
 		addDynamicallyGeneratedStrings(i18nStrings)
 	}
@@ -234,23 +248,31 @@ func checkCmdF(command *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.New("invalid enterprise-dir parameter")
 	}
-	mattermostDir, err := command.Flags().GetString("mattermost-dir")
+	mattermostDir, err := command.Flags().GetString("server-dir")
 	if err != nil {
-		return errors.New("invalid mattermost-dir parameter")
+		return errors.New("invalid server-dir parameter")
 	}
 	portalDir, err := command.Flags().GetString("portal-dir")
 	if err != nil {
 		return errors.New("invalid portal-dir parameter")
 	}
+	modelDir, err := command.Flags().GetString("model-dir")
+	if err != nil {
+		return errors.New("invalid model-dir parameter")
+	}
+	pluginDir, err := command.Flags().GetString("plugin-dir")
+	if err != nil {
+		return errors.New("invalid plugin-dir parameter")
+	}
 	translationDir := mattermostDir
 	if portalDir != "" {
 		if enterpriseDir != "" || mattermostDir != "" {
-			return errors.New("please specify EITHER portal-dir or enterprise-dir/mattermost-dir")
+			return errors.New("please specify EITHER portal-dir or enterprise-dir/server-dir")
 		}
 		translationDir = portalDir
 		skipDynamic = true // dynamics are not needed for portal
 	}
-	extractedSrcStrings := extractSrcStrings(enterpriseDir, mattermostDir, portalDir)
+	extractedSrcStrings := extractSrcStrings(enterpriseDir, mattermostDir, modelDir, pluginDir, portalDir)
 	if !skipDynamic {
 		addDynamicallyGeneratedStrings(extractedSrcStrings)
 	}
@@ -472,7 +494,7 @@ func extractFromPath(path string, info os.FileInfo, err error, i18nStrings map[s
 	if strings.Contains(path, ".git/") || strings.HasPrefix(path, ".git/") {
 		return nil
 	}
-
+	fmt.Println("extracting: " + path)
 	src, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
@@ -542,9 +564,9 @@ func checkEmptySrcCmdF(command *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.New("invalid enterprise-dir parameter")
 	}
-	mattermostDir, err := command.Flags().GetString("mattermost-dir")
+	mattermostDir, err := command.Flags().GetString("server-dir")
 	if err != nil {
-		return errors.New("invalid mattermost-dir parameter")
+		return errors.New("invalid server-dir parameter")
 	}
 	portalDir, err := command.Flags().GetString("portal-dir")
 	if err != nil {
@@ -553,7 +575,7 @@ func checkEmptySrcCmdF(command *cobra.Command, args []string) error {
 	translationDir := path.Join(mattermostDir, "i18n")
 	if portalDir != "" {
 		if enterpriseDir != "" || mattermostDir != "" {
-			return errors.New("please specify EITHER portal-dir or enterprise-dir/mattermost-dir")
+			return errors.New("please specify EITHER portal-dir or enterprise-dir/server-dir")
 		}
 		translationDir = portalDir
 	}
@@ -607,9 +629,9 @@ func cleanEmptyCmdF(command *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.New("invalid enterprise-dir parameter")
 	}
-	mattermostDir, err := command.Flags().GetString("mattermost-dir")
+	mattermostDir, err := command.Flags().GetString("server-dir")
 	if err != nil {
-		return errors.New("invalid mattermost-dir parameter")
+		return errors.New("invalid server-dir parameter")
 	}
 	portalDir, err := command.Flags().GetString("portal-dir")
 	if err != nil {
@@ -618,7 +640,7 @@ func cleanEmptyCmdF(command *cobra.Command, args []string) error {
 	translationDir := path.Join(mattermostDir, "i18n")
 	if portalDir != "" {
 		if enterpriseDir != "" || mattermostDir != "" {
-			return errors.New("please specify EITHER portal-dir or enterprise-dir/mattermost-dir")
+			return errors.New("please specify EITHER portal-dir or enterprise-dir/server-dir")
 		}
 		translationDir = portalDir
 	}
