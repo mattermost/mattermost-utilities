@@ -105,7 +105,7 @@ func init() {
 }
 
 func getBaseFileSrcStrings(mattermostDir string) ([]Translation, error) {
-	jsonFile, err := ioutil.ReadFile(path.Join(mattermostDir, "i18n", "en.json"))
+	jsonFile, err := ioutil.ReadFile(path.Join(mattermostDir, "server", "i18n", "en.json"))
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func getBaseFileSrcStrings(mattermostDir string) ([]Translation, error) {
 func extractSrcStrings(enterpriseDir, mattermostDir, portalDir string) map[string]bool {
 	i18nStrings := map[string]bool{}
 	walkFunc := func(p string, info os.FileInfo, err error) error {
-		if strings.HasPrefix(p, path.Join(mattermostDir, "vendor")) {
+		if strings.HasPrefix(p, path.Join(mattermostDir, "vendor")) || strings.HasPrefix(p, path.Join(mattermostDir, "webapp")) {
 			return nil
 		}
 		return extractFromPath(p, info, err, i18nStrings)
@@ -208,7 +208,7 @@ func extractCmdF(command *cobra.Command, args []string) error {
 	}
 	sort.Slice(result, func(i, j int) bool { return result[i].Id < result[j].Id })
 
-	f, err := os.Create(path.Join(mattermostDir, "i18n", "en.json"))
+	f, err := os.Create(path.Join(mattermostDir, "server", "i18n", "en.json"))
 	if err != nil {
 		return err
 	}
@@ -550,14 +550,14 @@ func checkEmptySrcCmdF(command *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.New("invalid portal-dir parameter")
 	}
-	translationDir := path.Join(mattermostDir, "i18n")
+	translationDir := path.Join(mattermostDir, "server", "i18n")
 	if portalDir != "" {
 		if enterpriseDir != "" || mattermostDir != "" {
 			return errors.New("please specify EITHER portal-dir or enterprise-dir/mattermost-dir")
 		}
 		translationDir = portalDir
 	}
-	srcJSON, err := ioutil.ReadFile(path.Join(translationDir, "en.json"))
+	srcJSON, err := ioutil.ReadFile(path.Join(translationDir, "server", "en.json"))
 	if err != nil {
 		return err
 	}
