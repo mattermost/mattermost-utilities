@@ -5,12 +5,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	mattermostBuild      = "mattermost-build"
-	integrationsTeamSlug = "integrations"
-	securityionsTeamSlug = "core-security"
-)
-
 func init() {
 	rootCmd.AddCommand(repoCmd)
 
