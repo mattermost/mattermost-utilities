@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/google/go-github/v32/github"
 	log "github.com/sirupsen/logrus"
@@ -36,7 +35,7 @@ var prsListCmd = &cobra.Command{
 			return err
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), actionTimeout)
 		defer cancel()
 
 		prs, err := getPluginPRs(ctx, client)
@@ -70,7 +69,7 @@ var prsMergeCmd = &cobra.Command{
 			return err
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), actionTimeout)
 		defer cancel()
 
 		prs, err := getPluginPRs(ctx, client)
@@ -99,7 +98,10 @@ var prsMergeCmd = &cobra.Command{
 				continue
 			}
 
-			err = mergePR(context.Background(), client, pr)
+			ctx, cancel := context.WithTimeout(context.Background(), actionTimeout)
+			defer cancel()
+
+			err = mergePR(ctx, client, pr)
 			if err != nil {
 				fmt.Printf("Failed to merged %s: %s\n\n", pr.GetHTMLURL(), err.Error())
 				continue

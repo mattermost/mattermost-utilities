@@ -72,11 +72,14 @@ var labelsSyncCmd = &cobra.Command{
 
 		log.Info("Starting to sync labels")
 
+		ctx, cancel := context.WithTimeout(context.Background(), actionTimeout)
+		defer cancel()
+
 		var wg sync.WaitGroup
 		for repo, labels := range mapping {
 			wg.Add(1)
 			go func(repo string, labels []Label) {
-				createOrUpdateLabels(client, repo, labels)
+				createOrUpdateLabels(ctx, client, repo, labels)
 				wg.Done()
 			}(repo, labels)
 		}
@@ -111,11 +114,14 @@ var labelsMigrateCmd = &cobra.Command{
 
 		log.Info("Start to migrate labels")
 
+		ctx, cancel := context.WithTimeout(context.Background(), actionTimeout)
+		defer cancel()
+
 		var wg sync.WaitGroup
 		for repo := range mapping {
 			wg.Add(1)
 			go func(repo string) {
-				migrateLabels(client, repo)
+				migrateLabels(ctx, client, repo)
 				wg.Done()
 			}(repo)
 		}
@@ -125,8 +131,8 @@ var labelsMigrateCmd = &cobra.Command{
 	},
 }
 
-func migrateLabels(client *github.Client, repo string) {
-	remoteLabels, err := fetchLabels(client, repo)
+func migrateLabels(ctx context.Context, client *github.Client, repo string) {
+	remoteLabels, err := fetchLabels(ctx, client, repo)
 	if err != nil {
 		log.WithField("repo", repo).WithError(err).Error("Failed to fetch labels")
 		return
@@ -138,7 +144,7 @@ func migrateLabels(client *github.Client, repo string) {
 				if new == "" {
 					logger := log.WithFields(log.Fields{"repo": repo, "old": old})
 
-					_, err = client.Issues.DeleteLabel(context.Background(), org, repo, old)
+					_, err = client.Issues.DeleteLabel(ctx, org, repo, old)
 					if err != nil {
 						logger.WithError(err).Error("Failed to delete label")
 						continue
@@ -149,7 +155,7 @@ func migrateLabels(client *github.Client, repo string) {
 					logger := log.WithFields(log.Fields{"repo": repo, "old": old, "new": new})
 
 					newLabel := &github.Label{Name: &new}
-					_, _, err = client.Issues.EditLabel(context.Background(), org, repo, old, newLabel)
+					_, _, err = client.Issues.EditLabel(ctx, org, repo, old, newLabel)
 					if err != nil {
 						logger.WithError(err).Error("Failed to edit label")
 						continue
@@ -162,8 +168,8 @@ func migrateLabels(client *github.Client, repo string) {
 	}
 }
 
-func removeAllLabels(client *github.Client, repo string) {
-	remoteLabels, err := fetchLabels(client, repo)
+func removeAllLabels(ctx context.Context, client *github.Client, repo string) {
+	remoteLabels, err := fetchLabels(ctx, client, repo)
 	if err != nil {
 		log.WithField("repo", repo).WithError(err).Error("Failed to fetch labels")
 		return
@@ -172,7 +178,7 @@ func removeAllLabels(client *github.Client, repo string) {
 	for _, remoteLabel := range remoteLabels {
 		logger := log.WithFields(log.Fields{"repo": repo, "label": remoteLabel.GetName()})
 
-		_, err = client.Issues.DeleteLabel(context.Background(), org, repo, remoteLabel.GetName())
+		_, err = client.Issues.DeleteLabel(ctx, org, repo, remoteLabel.GetName())
 		if err != nil {
 			logger.WithError(err).Error("Failed to delete label")
 			continue
@@ -182,8 +188,8 @@ func removeAllLabels(client *github.Client, repo string) {
 	}
 }
 
-func createOrUpdateLabels(client *github.Client, repo string, labels []Label) {
-	remoteLabels, err := fetchLabels(client, repo)
+func createOrUpdateLabels(ctx context.Context, client *github.Client, repo string, labels []Label) {
+	remoteLabels, err := fetchLabels(ctx, client, repo)
 	if err != nil {
 		log.WithField("repo", repo).WithError(err).Error("Failed to fetch labels")
 		return
@@ -196,7 +202,7 @@ func createOrUpdateLabels(client *github.Client, repo string, labels []Label) {
 		for _, remoteLabel := range remoteLabels {
 			if strings.EqualFold(remoteLabel.GetName(), label.Name) {
 				if !label.Equal(remoteLabel) {
-					_, _, err = client.Issues.EditLabel(context.Background(), org, repo, label.Name, label.ToGithubLabel())
+					_, _, err = client.Issues.EditLabel(ctx, org, repo, label.Name, label.ToGithubLabel())
 					if err != nil {
 						logger.WithError(err).Error("Failed to edit label")
 						continue
@@ -212,7 +218,7 @@ func createOrUpdateLabels(client *github.Client, repo string, labels []Label) {
 		}
 
 		if !found {
-			_, _, err := client.Issues.CreateLabel(context.Background(), org, repo, label.ToGithubLabel())
+			_, _, err := client.Issues.CreateLabel(ctx, org, repo, label.ToGithubLabel())
 			if err != nil {
 				logger.WithError(err).Error("Failed to create label")
 				continue
@@ -238,16 +244,16 @@ func createOrUpdateLabels(client *github.Client, repo string, labels []Label) {
 	}
 }
 
-func fetchLabels(client *github.Client, repo string) ([]*github.Label, error) {
+func fetchLabels(ctx context.Context, client *github.Client, repo string) ([]*github.Label, error) {
 	opt := &github.ListOptions{
-		PerPage: 50,
+		PerPage: perPage,
 	}
 
 	// Get all labels of results
 	var allLabels []*github.Label
 
 	for {
-		repos, resp, err := client.Issues.ListLabels(context.Background(), org, repo, opt)
+		repos, resp, err := client.Issues.ListLabels(ctx, org, repo, opt)
 		if err != nil {
 			return nil, err
 		}
