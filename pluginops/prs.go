@@ -227,12 +227,16 @@ func isPluginRepo(repoName string) bool {
 }
 
 func mergePR(ctx context.Context, client *github.Client, pr *prInfo) error {
-	_, err := client.Issues.RemoveLabelForIssue(ctx, org, pr.Repository, pr.GetNumber(), "2: Dev Review")
-	if err != nil {
-		return err
+	for _, l := range pr.Labels {
+		if l.GetName() == devReviewLabel.Name {
+			_, err := client.Issues.RemoveLabelForIssue(ctx, org, pr.Repository, pr.GetNumber(), l.GetName())
+			if err != nil {
+				return err
+			}
+		}
 	}
 
-	_, _, err = client.Issues.AddLabelsToIssue(ctx, org, pr.Repository, pr.GetNumber(), []string{"4: Reviews Complete"})
+	_, _, err := client.Issues.AddLabelsToIssue(ctx, org, pr.Repository, pr.GetNumber(), []string{"4: Reviews Complete"})
 	if err != nil {
 		return err
 	}

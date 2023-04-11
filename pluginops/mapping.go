@@ -56,12 +56,15 @@ var defaultMapping = map[string][]Label{
 	"mattermost-plugin-zoom":              pluginLabels,
 	"standup-raven":                       communityPlugins,
 }
+var (
+	devReviewLabel = Label{"2: Dev Review", "Requires review by a core committer", "eb6420"}
+)
 
 // PR is the list of labels typically used on PRs. Use --
 var pullRequest = []Label{
 	{"1: PM Review", "Requires review by a product manager", "006b75"},
 	{"1: UX Review", "Requires review by a UX Designer", "7cdfe2"},
-	{"2: Dev Review", "Requires review by a core committer", "eb6420"},
+	devReviewLabel,
 	{"3: QA Review", "Requires review by a QA tester", "7cdfe2"},
 	{"3: Security Review", "Review requested from Security Team", "1d76db"},
 	{"4: Reviews Complete", "All reviewers have approved the pull request", "0e8a16"},
