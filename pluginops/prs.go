@@ -101,7 +101,8 @@ var prsMergeCmd = &cobra.Command{
 
 			err = mergePR(context.Background(), client, pr)
 			if err != nil {
-				return err
+				fmt.Printf("Failed to merged %s: %s\n\n", pr.GetHTMLURL(), err.Error())
+				continue
 			}
 
 			fmt.Printf("Merged %s\n\n", pr.GetHTMLURL())
