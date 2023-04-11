@@ -212,7 +212,7 @@ func (pr *prInfo) readyToBeMerged() bool {
 		return true
 	}
 
-	return true
+	return false
 }
 
 func isPluginRepo(repoName string) bool {
