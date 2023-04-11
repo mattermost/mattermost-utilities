@@ -208,11 +208,8 @@ func (pr *prInfo) readyToBeMerged() bool {
 			return false
 		}
 	}
-	if hasOneApprovedReview {
-		return true
-	}
 
-	return false
+	return hasOneApprovedReview
 }
 
 func isPluginRepo(repoName string) bool {
