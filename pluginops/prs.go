@@ -204,7 +204,7 @@ func (pr *prInfo) readyToBeMerged() bool {
 		}
 
 		// If a review from dylan is pending, the PR is not ready to be merged.
-		if r.User.GetName() == "dylan.haussermann" && r.GetState() == "PENDING" {
+		if r.User.GetName() == "DHaussermann" && r.GetState() == "PENDING" {
 			return false
 		}
 	}
