@@ -208,9 +208,12 @@ func releaseVersion() error {
 	if err != nil {
 		log.WithError(err).Debug("Failed to create GitHub client. Won't try to automatically set ticket link")
 	} else {
+		ctx, cancel := context.WithTimeout(context.Background(), actionTimeout)
+		defer cancel()
+
 		issueTitle := fmt.Sprintf("Release v%s", newVersion.FinalizeVersion())
 		query := fmt.Sprintf("state:open is:issue org:mattermost repo:%s %s", repoName, issueTitle)
-		result, _, err := client.Search.Issues(context.Background(), query, nil)
+		result, _, err := client.Search.Issues(ctx, query, nil)
 		if err != nil {
 			return err
 		}

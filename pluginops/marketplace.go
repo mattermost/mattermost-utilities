@@ -32,7 +32,7 @@ var marketplaceInstallCmd = &cobra.Command{
 
 		filter := &model.MarketplacePluginFilter{
 			Page:                 0,
-			PerPage:              100,
+			PerPage:              perPage,
 			EnterprisePlugins:    true,
 			BuildEnterpriseReady: true,
 		}
@@ -93,7 +93,7 @@ var marketplaceUnnstallCmd = &cobra.Command{
 
 		filter := &model.MarketplacePluginFilter{
 			Page:              0,
-			PerPage:           100,
+			PerPage:           perPage,
 			EnterprisePlugins: true,
 		}
 

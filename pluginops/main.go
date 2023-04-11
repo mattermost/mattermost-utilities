@@ -44,7 +44,7 @@ func getGitHubClient() (*github.Client, error) {
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
-	tc := oauth2.NewClient(context.Background(), ts)
+	tc := oauth2.NewClient(context.TODO(), ts)
 
 	return github.NewClient(tc), nil
 }

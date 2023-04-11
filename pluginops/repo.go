@@ -1,14 +1,10 @@
 package main
 
 import (
+	"context"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-)
-
-const (
-	mattermostBuild      = "mattermost-build"
-	integrationsTeamSlug = "integrations"
-	securityionsTeamSlug = "core-security"
 )
 
 func init() {
@@ -38,9 +34,13 @@ var setupCommunityCmd = &cobra.Command{
 		repo := args[0]
 
 		log.Info("Cleaning up existing labels")
-		removeAllLabels(client, repo)
+
+		ctx, cancel := context.WithTimeout(context.Background(), actionTimeout)
+		defer cancel()
+
+		removeAllLabels(ctx, client, repo)
 
 		log.Info("Setting up new labels")
-		createOrUpdateLabels(client, repo, communityPlugins)
+		createOrUpdateLabels(ctx, client, repo, communityPlugins)
 	},
 }
