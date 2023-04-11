@@ -49,9 +49,9 @@ var prsListCmd = &cobra.Command{
 			out := fmt.Sprintf("%s: %s", pr.Repository, pr.GetTitle())
 
 			if pr.readyToBeMerged() {
-				out += Green("\u2713")
+				out += Green(checkMark)
 			} else {
-				out += Red("\u2715")
+				out += Red(xMark)
 			}
 			fmt.Print(out + "\n")
 		}
