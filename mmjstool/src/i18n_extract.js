@@ -3,23 +3,23 @@
 
 /* eslint-disable no-console */
 
+import * as fs from 'fs';
+
 import {parse} from '@typescript-eslint/typescript-estree';
-
-const fs = require('fs');
-
-const FileHound = require('filehound');
-
-const walk = require('estree-walk');
+import walk from 'estree-walk';
+import * as FileHound from 'filehound';
 
 const translatableComponents = {
-    FormattedText: [{id: 'id', default: 'defaultMessage'}],
     FormattedMessage: [{id: 'id', default: 'defaultMessage'}],
     FormattedHTMLMessage: [{id: 'id', default: 'defaultMessage'}],
     FormattedMarkdownMessage: [{id: 'id', default: 'defaultMessage'}],
-    FormattedMarkdownText: [{id: 'id', default: 'defaultMessage'}],
     FormattedAdminHeader: [{id: 'id', default: 'defaultMessage'}],
     LocalizedInput: ['placeholder'],
     LocalizedIcon: ['title'],
+
+    // Used in mattermost-mobile exclusively
+    FormattedText: [{id: 'id', default: 'defaultMessage'}],
+    FormattedMarkdownText: [{id: 'id', default: 'defaultMessage'}],
 };
 
 export function extractFromDirectory(dirPaths, filters = []) {
@@ -72,8 +72,6 @@ function extractFromFile(path) {
 
                 if (id && id !== '') {
                     translations[id] = defaultMessage;
-                } else {
-                    // console.log(node.arguments);
                 }
             } else if ((node.callee.type === 'MemberExpression' && node.callee.property.name === 'formatMessage') ||
                 node.callee.name === 'formatMessage') {
@@ -97,6 +95,35 @@ function extractFromFile(path) {
             } else if (node.callee.name === 't') {
                 const id = node.arguments[0] && node.arguments[0].value;
                 translations[id] = '';
+            } else if ((node.callee.type === 'MemberExpression' && node.callee.property.name === 'defineMessages') ||
+                node.callee.name === 'defineMessages') {
+                if (node.arguments && node.arguments[0] && node.arguments[0].properties && node.arguments[0].properties.length !== 0) {
+                    for (const property of node.arguments[0].properties) {
+                        if (property.type && property.type === 'Property' && property.key && property.key.name !== '' && property.value &&
+                            property.value.type === 'ObjectExpression' && property.value.properties && property.value.properties.length !== 0) {
+                            const idProperty = property.value.properties[0];
+                            let id = '';
+                            if (idProperty && idProperty.type && idProperty.type === 'Property' && idProperty.key &&
+                                idProperty.key.type && idProperty.key.type === 'Identifier' && idProperty.key.name === 'id' &&
+                                idProperty.value && idProperty.value.type && idProperty.value.type === 'Literal' && idProperty.value.value !== '') {
+                                id = idProperty.value.value;
+                            }
+
+                            const defaultMessageProperty = property.value.properties[1];
+                            let defaultMessage = '';
+
+                            if (defaultMessageProperty && defaultMessageProperty.type && defaultMessageProperty.type === 'Property' && defaultMessageProperty.key &&
+                            defaultMessageProperty.key.type && defaultMessageProperty.key.type === 'Identifier' && defaultMessageProperty.key.name === 'defaultMessage' &&
+                            defaultMessageProperty.value && defaultMessageProperty.value.type && defaultMessageProperty.value.type === 'Literal' && defaultMessageProperty.value.value !== '') {
+                                defaultMessage = defaultMessageProperty.value.value;
+                            }
+
+                            if (id && id !== '' && defaultMessage && defaultMessage !== '') {
+                                translations[id] = defaultMessage;
+                            }
+                        }
+                    }
+                }
             }
         },
         JSXOpeningElement: (node) => {
