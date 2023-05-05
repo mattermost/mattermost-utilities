@@ -97,31 +97,33 @@ function extractFromFile(path) {
                 translations[id] = '';
             } else if ((node.callee.type === 'MemberExpression' && node.callee.property.name === 'defineMessages') ||
                 node.callee.name === 'defineMessages') {
-                if (node.arguments && node.arguments[0] && node.arguments[0].properties && node.arguments[0].properties.length !== 0) {
-                    for (const nodeProperty of node.arguments[0].properties) {
-                        if (nodeProperty.type && nodeProperty.type === 'Property' && nodeProperty.key && nodeProperty.key.name !== '' &&
+                if (!node?.arguments?.[0]?.properties) {
+                    return;
+                }
+
+                for (const nodeProperty of node.arguments[0].properties) {
+                    if (nodeProperty.type && nodeProperty.type === 'Property' && nodeProperty.key && nodeProperty.key.name !== '' &&
                             nodeProperty.value && nodeProperty.value.type === 'ObjectExpression' &&
                             nodeProperty.value.properties && nodeProperty.value.properties.length !== 0) {
-                            let id = '';
-                            let defaultMessage = '';
+                        let id = '';
+                        let defaultMessage = '';
 
-                            for (const property of nodeProperty.value.properties) {
-                                if (property && property.type && property.type === 'Property' &&
+                        for (const property of nodeProperty.value.properties) {
+                            if (property && property.type && property.type === 'Property' &&
                                     (property.key.name === 'id' || property.key.name === 'defaultMessage') &&
                                     property.key && property.key.type && property.key.type === 'Identifier' &&
                                     property.value && property.value.type && property.value.type === 'Literal' &&
                                     property.value.value !== '') {
-                                    if (property.key.name === 'id') {
-                                        id = property.value.value;
-                                    } else if (property.key.name === 'defaultMessage') {
-                                        defaultMessage = property.value.value;
-                                    }
+                                if (property.key.name === 'id') {
+                                    id = property.value.value;
+                                } else if (property.key.name === 'defaultMessage') {
+                                    defaultMessage = property.value.value;
                                 }
                             }
+                        }
 
-                            if (id && id !== '' && defaultMessage && defaultMessage !== '') {
-                                translations[id] = defaultMessage;
-                            }
+                        if (id !== '' && defaultMessage !== '') {
+                            translations[id] = defaultMessage;
                         }
                     }
                 }
