@@ -1,8 +1,6 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-/* eslint-disable no-console */
-
 import * as fs from 'fs';
 
 import {parse} from '@typescript-eslint/typescript-estree';
@@ -13,7 +11,6 @@ const translatableComponents = {
     FormattedMessage: [{id: 'id', default: 'defaultMessage'}],
     FormattedHTMLMessage: [{id: 'id', default: 'defaultMessage'}],
     FormattedMarkdownMessage: [{id: 'id', default: 'defaultMessage'}],
-    FormattedAdminHeader: [{id: 'id', default: 'defaultMessage'}],
     LocalizedInput: ['placeholder'],
     LocalizedIcon: ['title'],
 
@@ -37,9 +34,9 @@ export function extractFromDirectory(dirPaths, filters = []) {
                             try {
                                 Object.assign(translations, extractFromFile(file));
                             } catch (e) {
-                                console.log(e);
-                                console.log('Unable to parse file:', file);
-                                console.log('Error in: line', e.loc && e.loc.line, 'column', e.loc && e.loc.column);
+                                console.log(e); // eslint-disable-line no-console
+                                console.log('Unable to parse file:', file); // eslint-disable-line no-console
+                                console.log('Error in: line', e.loc && e.loc.line, 'column', e.loc && e.loc.column); // eslint-disable-line no-console
                                 return;
                             }
                         }
