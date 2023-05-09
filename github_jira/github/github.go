@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/go-github/v35/github"
+	gh "github.com/google/go-github/v52/github"
 	"github.com/mattermost/mattermost-utilities/github_jira/jira"
 	"golang.org/x/oauth2"
 )
@@ -26,6 +26,17 @@ func has(needle string, haystack []string) bool {
 		}
 	}
 	return false
+}
+
+func validateLabel(foundLabel string, inputLabels []string) string {
+	for _, item := range inputLabels {
+		if foundLabel == item {
+			return foundLabel
+		} else {
+			return item
+		}
+	}
+	return ""
 }
 
 func ParseRepo(repoStr string) (repo, error) {
@@ -46,7 +57,7 @@ type repo struct {
 
 type LinkedIssue struct {
 	JiraKey     string
-	GithubIssue github.Issue
+	GithubIssue gh.Issue
 }
 
 type FailedLink struct {
@@ -101,7 +112,7 @@ func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []stri
 	)
 	tc := oauth2.NewClient(ctx, ts)
 
-	client := github.NewClient(tc)
+	client := gh.NewClient(tc)
 
 	r, _, err := client.Repositories.Get(ctx, repo.owner, repo.repo)
 	if err != nil {
@@ -161,7 +172,7 @@ func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []stri
 		}
 		// Add one second sleep per https://docs.github.com/en/rest/guides/best-practices-for-integrators#dealing-with-abuse-rate-limits
 		time.Sleep(1 * time.Second)
-		issueRequest := github.IssueRequest{}
+		issueRequest := gh.IssueRequest{}
 		newIssue, _, err := client.Issues.Create(ctx, repo.owner, repo.repo, &issueRequest)
 		if err != nil {
 			outcome.FailedLinks = append(outcome.FailedLinks, FailedLink{
@@ -188,4 +199,79 @@ func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []stri
 		return outcome, fmt.Errorf("Failed creating %d issues", numFailures)
 	}
 	return outcome, nil
+}
+
+func GetClient(ghToken string) *gh.Client {
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: ghToken},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+	return gh.NewClient(tc)
+}
+
+func GetLabelsList(client *gh.Client, repo repo, labels []string) ([]string, error) {
+	var foundLabels []string
+	ctx := context.Background()
+	existingGhLabels, _, err := client.Issues.ListLabels(ctx, repo.owner, repo.repo, nil)
+
+	if err != nil {
+		return foundLabels, err
+	}
+
+	var labelSearch string
+	for _, ll := range existingGhLabels {
+		labelSearch = validateLabel(*ll.Name, labels)
+		if labelSearch != "" {
+			foundLabels = append(foundLabels, *(ll.Name))
+		} else {
+			fmt.Printf("Unknown label %s \n", labelSearch)
+		}
+	}
+	return foundLabels, nil
+}
+
+func checkExistingIssue(issueId *int, issues []int) int {
+
+	for _, issue := range issues {
+		if issue == *issueId {
+			return issue
+		} else {
+			return issue
+		}
+	}
+	return -1
+}
+func GetIssuesList(client *gh.Client, repo repo, issues []int) ([]int, error) {
+
+	var foundIssues []int
+	ctx := context.Background()
+
+	issuesList, _, err := client.Issues.ListByRepo(ctx, repo.owner, repo.repo, nil)
+	if err != nil {
+		return foundIssues, err
+	}
+	var foundIssue int
+	for _, issue := range issuesList {
+		foundIssue = checkExistingIssue(issue.Number, issues)
+		if foundIssue > 0 {
+			foundIssues = append(foundIssues, foundIssue)
+		} else {
+			fmt.Printf("Unknown Issue %d \n", foundIssue)
+		}
+	}
+	return foundIssues, nil
+}
+
+func SetLabels(client *gh.Client, repo repo, labels []string, issues []int) (multiError []error) {
+
+	ctx := context.Background()
+
+	for _, issue := range issues {
+		_, _, err := client.Issues.AddLabelsToIssue(ctx, repo.owner, repo.repo, issue, labels)
+		if err != nil {
+			multiError = append(multiError, fmt.Errorf("Error %v setting label to issue %d ", err, issue))
+		}
+	}
+	return multiError
 }

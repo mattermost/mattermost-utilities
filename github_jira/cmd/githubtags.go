@@ -3,9 +3,9 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/mattermost/mattermost-utilities/github_jira/github"
-	"github.com/mattermost/mattermost-utilities/github_jira/jira"
 	"github.com/spf13/cobra"
 )
 
@@ -14,36 +14,25 @@ var GithubLabelsCmd = &cobra.Command{
 	Short:   "Add labels to github issues provided in list of issue-numbers",
 	Example: `  labelgithub -t <github token> -r mattermost/mattermost-server -l 'Tech/Go,Help Wanted,Up For Grabs' 19977 12345`,
 	Args:    cobra.MinimumNArgs(1),
-	RunE:    createGithubCmdF,
+	RunE:    createGithubLabels,
 }
 
 func init() {
-	GithubLabelsCmd.Flags().StringP("token", "t", "", "The token used to authenticate the user against Jira.")
-	GithubLabelsCmd.MarkFlagRequired("jira-token")
-	GithubLabelsCmd.Flags().StringP("jira-username", "u", "", "Username of the user to get the ticket information.")
-	GithubLabelsCmd.MarkFlagRequired("jira-username")
-	GithubLabelsCmd.Flags().StringP("github-token", "g", "", "The token used to authenticate the user against Github.")
-	GithubLabelsCmd.MarkFlagRequired("github-token")
+	GithubLabelsCmd.Flags().StringP("token", "t", "", "The token used to authenticate the user against github.")
+	GithubLabelsCmd.MarkFlagRequired("token")
 	GithubLabelsCmd.Flags().StringP("repo", "r", "mattermost/mattermost-server", "The repository which contains the issues. E.g. mattermost/mattermost-server")
 	GithubLabelsCmd.MarkFlagRequired("repo")
 	GithubLabelsCmd.Flags().StringSliceP("labels", "l", []string{}, "The labels to set to the issues")
 	GithubLabelsCmd.MarkFlagRequired("labels")
-	GithubLabelsCmd.Flags().Bool("dry-run", false, "Skip actually creating any tickets")
+	GithubLabelsCmd.Flags().Bool("dry-run", false, "Skip actually creating any labels")
 	GithubLabelsCmd.Flags().Bool("debug", false, "Dump debugging information.")
 
 	RootCmd.AddCommand(GithubLabelsCmd)
 }
 
-func createGithubCmdF(command *cobra.Command, args []string) error {
-	jiraUsername, err := getNonEmptyString(command, "jira-username")
-	if err != nil {
-		return err
-	}
-	jiraToken, err := getNonEmptyString(command, "jira-token")
-	if err != nil {
-		return err
-	}
-	ghToken, err := getNonEmptyString(command, "github-token")
+func createGithubLabels(command *cobra.Command, args []string) error {
+
+	ghToken, err := getNonEmptyString(command, "token")
 	if err != nil {
 		return err
 	}
@@ -69,25 +58,43 @@ func createGithubCmdF(command *cobra.Command, args []string) error {
 		return errors.New("invalid debug parameter")
 	}
 
-	jiraBasicAuth := jira.MakeBasicAuthStr(jiraUsername, jiraToken)
-	jiraIssues, err := jira.SearchByNumber(jiraBasicAuth, debug, args)
-	if err != nil {
-		return fmt.Errorf("searching jira: %v", err)
-	}
-
 	if debug {
-		for _, issue := range jiraIssues {
-			fmt.Println("DEBUG: Jira issues:")
+		for _, issue := range args {
+			fmt.Println("DEBUG: Github issues:")
 			fmt.Printf("%+v\n", issue)
 		}
 	}
+	var intArgs []int
 
-	outcome, err := github.CreateIssues(jiraBasicAuth, ghToken, ghRepo, labels, jiraIssues, dryRun)
-
-	if err != nil {
-		fmt.Printf("Failed to create issues: %v\n", err)
+	for _, arg := range args {
+		i, err := strconv.Atoi(arg)
+		if err != nil {
+			fmt.Println(err)
+		}
+		intArgs = append(intArgs, i)
 	}
-	fmt.Println(outcome.AsTables())
 
-	return err
+	client := github.GetClient(ghToken)
+
+	// Get valid labels
+	validLabels, errLabels := github.GetLabelsList(client, ghRepo, labels)
+	if errLabels != nil {
+		return errLabels
+	}
+	validIssues, errIssues := github.GetIssuesList(client, ghRepo, intArgs)
+	if errLabels != nil {
+		return errIssues
+	}
+
+	multiError := github.SetLabels(client, ghRepo, validLabels, validIssues)
+	var newErr error
+	if len(multiError) > 0 {
+		newErr = errors.New("multiple errors found")
+	}
+
+	for mErr := range multiError {
+		fmt.Println(mErr)
+	}
+
+	return newErr
 }

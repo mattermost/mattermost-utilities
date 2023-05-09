@@ -2,8 +2,9 @@ package github
 
 import (
 	"fmt"
-	"github.com/google/go-github/v35/github"
 	"testing"
+
+	"github.com/google/go-github/v52/github"
 )
 
 func Test_ParseRepoHappyPath(t *testing.T) {
