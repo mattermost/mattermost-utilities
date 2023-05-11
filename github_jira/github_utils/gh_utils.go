@@ -2,10 +2,7 @@ package github_utils
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -105,53 +102,13 @@ func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []stri
 	}
 
 	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: ghToken},
-	)
-	tc := oauth2.NewClient(ctx, ts)
 
-	client := gh.NewClient(tc)
-
-	r, _, err := client.Repositories.Get(ctx, repo.owner, repo.repo)
-	if err != nil {
-		return outcome, err
-	}
+	client := GetClient(ghToken)
 
 	// ListTags
-	finalLabels := []label{}
-	httpClient := &http.Client{}
-	req, err := http.NewRequest("GET", *r.LabelsURL, nil)
-	if err != nil {
-		return outcome, err
-	}
-	resp, err := httpClient.Do(req)
-
-	if err != nil {
-		return outcome, err
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		return outcome, err
-	}
-
-	respBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return outcome, err
-	}
-
-	var candidateLabels []label
-	err = json.Unmarshal(respBytes, &candidateLabels)
-
-	if err != nil {
-		return outcome, err
-	}
-
-	for _, label := range candidateLabels {
-		if has(label.Name, labels) {
-			finalLabels = append(finalLabels, label)
-		}
+	validLabels, errLabels := GetLabelsList(client, repo, labels)
+	if errLabels != nil {
+		return outcome, errLabels
 	}
 
 	if dryRun {
@@ -191,6 +148,9 @@ func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []stri
 			JiraKey:     key,
 			GithubIssue: *newIssue,
 		})
+
+		// Add support for adding tags to the issue as well as soon as it is created.
+		setLabel(ctx, client, repo, validLabels, *newIssue.Number)
 	}
 
 	if numFailures := len(outcome.FailedLinks); numFailures > 0 {
@@ -268,8 +228,13 @@ func SetLabels(client *gh.Client, repo repo, labels []string, issues []int) (mul
 	for _, issue := range issues {
 		_, _, err := client.Issues.AddLabelsToIssue(ctx, repo.owner, repo.repo, issue, labels)
 		if err != nil {
-			multiError = append(multiError, fmt.Errorf("Error %v setting label to issue %d ", err, issue))
+			multiError = append(multiError, fmt.Errorf("error %v setting label to issue %d ", err, issue))
 		}
 	}
 	return multiError
+}
+
+func setLabel(ctx context.Context, client *gh.Client, repo repo, labels []string, issue int) error {
+	_, _, err := client.Issues.AddLabelsToIssue(ctx, repo.owner, repo.repo, issue, labels)
+	return err
 }
