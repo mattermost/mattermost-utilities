@@ -1,4 +1,4 @@
-package github
+package github_utils
 
 import (
 	"context"
@@ -28,15 +28,13 @@ func has(needle string, haystack []string) bool {
 	return false
 }
 
-func validateLabel(foundLabel string, inputLabels []string) string {
+func validateLabel(foundLabel string, inputLabels []*gh.Label) bool {
 	for _, item := range inputLabels {
-		if foundLabel == item {
-			return foundLabel
-		} else {
-			return item
+		if foundLabel == *item.Name {
+			return true
 		}
 	}
-	return ""
+	return false
 }
 
 func ParseRepo(repoStr string) (repo, error) {
@@ -219,28 +217,28 @@ func GetLabelsList(client *gh.Client, repo repo, labels []string) ([]string, err
 		return foundLabels, err
 	}
 
-	var labelSearch string
-	for _, ll := range existingGhLabels {
-		labelSearch = validateLabel(*ll.Name, labels)
-		if labelSearch != "" {
-			foundLabels = append(foundLabels, *(ll.Name))
+	var flag bool
+	for _, ll := range labels {
+		flag = validateLabel(ll, existingGhLabels)
+		if flag {
+			foundLabels = append(foundLabels, ll)
 		} else {
-			fmt.Printf("Unknown label %s \n", labelSearch)
+			fmt.Printf("Unknown label %s \n", ll)
 		}
 	}
 	return foundLabels, nil
 }
 
-func checkExistingIssue(issueId *int, issues []int) int {
+func checkExistingIssue(issueId int, issues []*gh.Issue) bool {
 
 	for _, issue := range issues {
-		if issue == *issueId {
-			return issue
+		if *issue.Number == issueId {
+			return true
 		} else {
-			return issue
+			return false
 		}
 	}
-	return -1
+	return false
 }
 func GetIssuesList(client *gh.Client, repo repo, issues []int) ([]int, error) {
 
@@ -251,13 +249,13 @@ func GetIssuesList(client *gh.Client, repo repo, issues []int) ([]int, error) {
 	if err != nil {
 		return foundIssues, err
 	}
-	var foundIssue int
-	for _, issue := range issuesList {
-		foundIssue = checkExistingIssue(issue.Number, issues)
-		if foundIssue > 0 {
-			foundIssues = append(foundIssues, foundIssue)
+	var foundIssue bool
+	for _, issue := range issues {
+		foundIssue = checkExistingIssue(issue, issuesList)
+		if foundIssue {
+			foundIssues = append(foundIssues, issue)
 		} else {
-			fmt.Printf("Unknown Issue %d \n", foundIssue)
+			fmt.Printf("unknown issue %d \n", issue)
 		}
 	}
 	return foundIssues, nil

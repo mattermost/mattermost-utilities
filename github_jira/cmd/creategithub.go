@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/mattermost/mattermost-utilities/github_jira/github"
+	ghu "github.com/mattermost/mattermost-utilities/github_jira/github_utils"
 	"github.com/mattermost/mattermost-utilities/github_jira/jira"
 	"github.com/spf13/cobra"
 )
@@ -51,7 +51,7 @@ func createGithubCmdF(command *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	ghRepo, err := github.ParseRepo(repo)
+	ghRepo, err := ghu.ParseRepo(repo)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func createGithubCmdF(command *cobra.Command, args []string) error {
 		}
 	}
 
-	outcome, err := github.CreateIssues(jiraBasicAuth, ghToken, ghRepo, labels, jiraIssues, dryRun)
+	outcome, err := ghu.CreateIssues(jiraBasicAuth, ghToken, ghRepo, labels, jiraIssues, dryRun)
 
 	if err != nil {
 		fmt.Printf("Failed to create issues: %v\n", err)

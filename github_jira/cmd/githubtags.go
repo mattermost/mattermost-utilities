@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/mattermost/mattermost-utilities/github_jira/github"
+	ghu "github.com/mattermost/mattermost-utilities/github_jira/github_utils"
 	"github.com/spf13/cobra"
 )
 
@@ -24,9 +24,6 @@ func init() {
 	GithubLabelsCmd.MarkFlagRequired("repo")
 	GithubLabelsCmd.Flags().StringSliceP("labels", "l", []string{}, "The labels to set to the issues")
 	GithubLabelsCmd.MarkFlagRequired("labels")
-	GithubLabelsCmd.Flags().Bool("dry-run", false, "Skip actually creating any labels")
-	GithubLabelsCmd.Flags().Bool("debug", false, "Dump debugging information.")
-
 	RootCmd.AddCommand(GithubLabelsCmd)
 }
 
@@ -40,7 +37,7 @@ func createGithubLabels(command *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	ghRepo, err := github.ParseRepo(repo)
+	ghRepo, err := ghu.ParseRepo(repo)
 	if err != nil {
 		return err
 	}
@@ -49,21 +46,7 @@ func createGithubLabels(command *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	dryRun, err := command.Flags().GetBool("dry-run")
-	if err != nil {
-		return errors.New("invalid dry-run parameter")
-	}
-	debug, err := command.Flags().GetBool("debug")
-	if err != nil {
-		return errors.New("invalid debug parameter")
-	}
 
-	if debug {
-		for _, issue := range args {
-			fmt.Println("DEBUG: Github issues:")
-			fmt.Printf("%+v\n", issue)
-		}
-	}
 	var intArgs []int
 
 	for _, arg := range args {
@@ -74,26 +57,35 @@ func createGithubLabels(command *cobra.Command, args []string) error {
 		intArgs = append(intArgs, i)
 	}
 
-	client := github.GetClient(ghToken)
+	client := ghu.GetClient(ghToken)
 
 	// Get valid labels
-	validLabels, errLabels := github.GetLabelsList(client, ghRepo, labels)
+	validLabels, errLabels := ghu.GetLabelsList(client, ghRepo, labels)
 	if errLabels != nil {
 		return errLabels
 	}
-	validIssues, errIssues := github.GetIssuesList(client, ghRepo, intArgs)
+
+	if len(validLabels) == 0 {
+		return errors.New("no matching labels were found")
+	}
+
+	validIssues, errIssues := ghu.GetIssuesList(client, ghRepo, intArgs)
 	if errLabels != nil {
 		return errIssues
 	}
 
-	multiError := github.SetLabels(client, ghRepo, validLabels, validIssues)
+	if len(validIssues) == 0 {
+		return errors.New("no matching issues were found")
+	}
+
+	multiError := ghu.SetLabels(client, ghRepo, validLabels, validIssues)
 	var newErr error
 	if len(multiError) > 0 {
 		newErr = errors.New("multiple errors found")
 	}
 
 	for mErr := range multiError {
-		fmt.Println(mErr)
+		fmt.Println(multiError[mErr])
 	}
 
 	return newErr

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/mattermost/mattermost-utilities/github_jira/github"
+	ghu "github.com/mattermost/mattermost-utilities/github_jira/github_utils"
 	"github.com/mattermost/mattermost-utilities/github_jira/jira"
 	"github.com/spf13/cobra"
 )
@@ -43,7 +43,7 @@ func syncHelpWantedCmdF(command *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	ghRepo, err := github.ParseRepo("mattermost/mattermost-server")
+	ghRepo, err := ghu.ParseRepo("mattermost/mattermost-server")
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func syncHelpWantedCmdF(command *cobra.Command, args []string) error {
 		return nil
 	}
 
-	outcome, err := github.CreateIssues(jiraBasicAuth, ghToken, ghRepo, []string{"Help Wanted", "Up For Grabs"}, jiraIssues, dryRun)
+	outcome, err := ghu.CreateIssues(jiraBasicAuth, ghToken, ghRepo, []string{"Help Wanted", "Up For Grabs"}, jiraIssues, dryRun)
 
 	outcomeToPrint := ""
 
