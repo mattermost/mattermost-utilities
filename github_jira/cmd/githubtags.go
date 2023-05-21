@@ -68,7 +68,7 @@ func createGithubLabels(command *cobra.Command, args []string) error {
 	if len(validLabels) == 0 {
 		return errors.New("no matching labels were found")
 	}
-
+	fmt.Println(intArgs)
 	validIssues, errIssues := ghu.GetIssuesList(client, ghRepo, intArgs)
 	if errLabels != nil {
 		return errIssues

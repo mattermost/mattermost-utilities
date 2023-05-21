@@ -102,12 +102,10 @@ func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []stri
 	}
 
 	ctx := context.Background()
-
 	client := GetClient(ghToken)
 
 	// ListTags
 	validLabels, errLabels := GetLabelsList(client, repo, labels)
-	fmt.Println(validLabels)
 	if errLabels != nil {
 		return outcome, errLabels
 	}
@@ -128,10 +126,10 @@ func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []stri
 		}
 		// Add one second sleep per https://docs.github.com/en/rest/guides/best-practices-for-integrators#dealing-with-abuse-rate-limits
 		time.Sleep(1 * time.Second)
-		issueRequest := gh.IssueRequest{Title: &issue.Fields.Description,
+		issueRequest := gh.IssueRequest{Title: &title,
 			Body:   &description,
 			Labels: &validLabels}
-		fmt.Println(repo)
+		fmt.Printf("creating github issue for jira key %s\n", issue.Key)
 		newIssue, _, err := client.Issues.Create(ctx, repo.owner, repo.repo, &issueRequest)
 		if err != nil {
 			outcome.FailedLinks = append(outcome.FailedLinks, FailedLink{
@@ -140,6 +138,7 @@ func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []stri
 			})
 			continue
 		}
+		fmt.Printf("Updating %s to jira \n", *newIssue.URL)
 		err = jira.LinkToGithub(*newIssue.HTMLURL, key, jiraBasicAuth)
 		if err != nil {
 			outcome.FailedLinks = append(outcome.FailedLinks, FailedLink{
@@ -191,12 +190,9 @@ func GetLabelsList(client *gh.Client, repo repo, labels []string) ([]string, err
 }
 
 func checkExistingIssue(issueId int, issues []*gh.Issue) bool {
-
 	for _, issue := range issues {
 		if *issue.Number == issueId {
 			return true
-		} else {
-			return false
 		}
 	}
 	return false
@@ -225,9 +221,8 @@ func GetIssuesList(client *gh.Client, repo repo, issues []int) ([]int, error) {
 func SetLabels(client *gh.Client, repo repo, labels []string, issues []int) (multiError []error) {
 
 	ctx := context.Background()
-
 	for _, issue := range issues {
-		_, _, err := client.Issues.AddLabelsToIssue(ctx, repo.owner, repo.repo, issue, labels)
+		err := setLabel(ctx, client, repo, issue, labels)
 		if err != nil {
 			multiError = append(multiError, fmt.Errorf("error %v setting label to issue %d ", err, issue))
 		}
@@ -235,7 +230,7 @@ func SetLabels(client *gh.Client, repo repo, labels []string, issues []int) (mul
 	return multiError
 }
 
-func setLabel(ctx context.Context, client *gh.Client, repo repo, labels []string, issue int) error {
+func setLabel(ctx context.Context, client *gh.Client, repo repo, issue int, labels []string) error {
 	_, _, err := client.Issues.AddLabelsToIssue(ctx, repo.owner, repo.repo, issue, labels)
 	return err
 }

@@ -131,7 +131,6 @@ func parseApiResponse(response map[string]interface{}) ([]Issue, error) {
 	var is []Issue
 	var descr, summary string
 	for i := range fields {
-		//fmt.Println(fields[i])
 		issue, ok := fields[i].(map[string]interface{})
 		if !ok {
 			return nil, errors.New("Not found")
@@ -156,7 +155,6 @@ func parseApiResponse(response map[string]interface{}) ([]Issue, error) {
 		}
 		is = append(is, is1)
 	}
-	fmt.Println(is)
 	if !ok {
 		return nil, errors.New("Not found")
 	}
