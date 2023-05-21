@@ -107,6 +107,7 @@ func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []stri
 
 	// ListTags
 	validLabels, errLabels := GetLabelsList(client, repo, labels)
+	fmt.Println(validLabels)
 	if errLabels != nil {
 		return outcome, errLabels
 	}
@@ -127,7 +128,10 @@ func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []stri
 		}
 		// Add one second sleep per https://docs.github.com/en/rest/guides/best-practices-for-integrators#dealing-with-abuse-rate-limits
 		time.Sleep(1 * time.Second)
-		issueRequest := gh.IssueRequest{}
+		issueRequest := gh.IssueRequest{Title: &issue.Fields.Description,
+			Body:   &description,
+			Labels: &validLabels}
+		fmt.Println(repo)
 		newIssue, _, err := client.Issues.Create(ctx, repo.owner, repo.repo, &issueRequest)
 		if err != nil {
 			outcome.FailedLinks = append(outcome.FailedLinks, FailedLink{
@@ -148,13 +152,10 @@ func CreateIssues(jiraBasicAuth string, ghToken string, repo repo, labels []stri
 			JiraKey:     key,
 			GithubIssue: *newIssue,
 		})
-
-		// Add support for adding tags to the issue as well as soon as it is created.
-		setLabel(ctx, client, repo, validLabels, *newIssue.Number)
 	}
 
 	if numFailures := len(outcome.FailedLinks); numFailures > 0 {
-		return outcome, fmt.Errorf("Failed creating %d issues", numFailures)
+		return outcome, fmt.Errorf("failed creating %d issues", numFailures)
 	}
 	return outcome, nil
 }
