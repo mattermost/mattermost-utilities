@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	mattermostAtlassianUrl = "https://broad.atlassian.net"
+	mattermostAtlassianUrl = "https://mattermost.atlassian.net"
 )
 
 type customFields struct {
@@ -79,9 +79,9 @@ func search(basicAuth string, debug bool, jql string, maxResults int, fields []s
 func SearchByNumber(basicAuth string, debug bool, issueNumbers []string) ([]Issue, error) {
 	issueNumbersQuery := []string{}
 	for _, issueNumber := range issueNumbers {
-		issueNumbersQuery = append(issueNumbersQuery, fmt.Sprintf("key = TM-%s", issueNumber))
+		issueNumbersQuery = append(issueNumbersQuery, fmt.Sprintf("key = MM-%s", issueNumber))
 	}
-	jql := fmt.Sprintf("project = TM AND %s", strings.Join(issueNumbersQuery, " OR "))
+	jql := fmt.Sprintf("project = MM AND %s", strings.Join(issueNumbersQuery, " OR "))
 	return search(basicAuth, debug, jql, len(issueNumbers), []string{"summary", "description"})
 }
 
