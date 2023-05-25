@@ -62,17 +62,22 @@ func search(basicAuth string, debug bool, jql string, maxResults int, fields []s
 		return nil, errors.Wrap(err, "searching jira")
 	}
 	defer resp.Body.Close()
-	var j map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&j)
-	if err != nil {
-		return nil, errors.Wrap(err, "error decoding api response")
-	}
-
 	if resp.StatusCode >= 400 {
 		return nil, fmt.Errorf("searching jira, status code %d with text %s", resp.StatusCode, string(""))
 	}
 
-	issues, _ := parseApiResponse(j)
+	var apiResp map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	if err != nil {
+		return nil, errors.Wrap(err, "error decoding api response")
+	}
+
+	if debug {
+		fmt.Println(apiResp)
+	}
+
+	// parse api response and extract required fields
+	issues, _ := parseApiResponse(apiResp)
 	return issues, nil
 }
 
