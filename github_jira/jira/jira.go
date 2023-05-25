@@ -92,13 +92,13 @@ func SearchByNumber(basicAuth string, debug bool, issueNumbers []string) ([]Issu
 
 func SearchByStatus(basicAuth string, debug bool) ([]Issue, error) {
 	statuses := strings.Join([]string{"Open", "Reopened"}, ", ")
-	jql := fmt.Sprintf("project = TM AND status in (%s) AND fixversion = \"Help Wanted\" AND \"GITHUB ISSUE\" IS EMPTY AND type != EPIC", statuses)
+	jql := fmt.Sprintf("project = MM AND status in (%s) AND fixversion = \"Help Wanted\" AND \"GITHUB ISSUE\" IS EMPTY AND type != EPIC", statuses)
 	return search(basicAuth, debug, jql, 100, []string{"summary", "description"})
 }
 
 func LinkToGithub(ghUrl, jiraKey, basicAuth string) error {
 	client := &http.Client{}
-	jiraFields := customFields{Fields: map[string]string{"customfield_10039": ghUrl}}
+	jiraFields := customFields{Fields: map[string]string{"customfield_11106": ghUrl}}
 	jiraFieldsReader, err := json.Marshal(jiraFields)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("creating request body for jira issue %s.", jiraKey))
