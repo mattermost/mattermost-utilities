@@ -2,7 +2,7 @@ import time
 import requests
 from requests.auth import HTTPBasicAuth
 from github import Github
-from jira_to_markdown import jira_to_markdown
+from jira2markdown import convert
 
 def create_github_issues(jira_username, jira_token, github_token, repo, labels, issues, dry_run):
     footer = '''
@@ -28,7 +28,9 @@ JIRA: https://mattermost.atlassian.net/browse/{{TICKET}}
     for issue in issues:
         title = issue['fields']['summary']
         key = issue['key']
-        markdown_description = jira_to_markdown(issue['fields']['description'])
+        markdown_description = convert(issue['fields']['description'] or '')
+        for attachment in issue['fields']['attachment']:
+            markdown_description = markdown_description.replace('src="'+attachment['filename'], 'src="'+attachment['content'])
         description = markdown_description + "\n\n" + footer.replace("{{TICKET}}", key)
 
         if dry_run:

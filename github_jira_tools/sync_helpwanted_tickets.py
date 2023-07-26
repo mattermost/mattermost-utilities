@@ -18,7 +18,7 @@ def cli(jira_username, jira_token, github_token, webhook_url, dry_run, debug):
     data = {
             "jql": "project = MM AND status not in (Submitted, Resolved, Closed) AND fixversion = \"Help Wanted\" AND \"GITHUB ISSUE\" IS EMPTY AND type != EPIC",
             "maxResults": 100,
-            "fields": ["summary", "description"],
+            "fields": ["summary", "description", "attachment"],
     }
     resp = requests.post(
         "https://mattermost.atlassian.net/rest/api/2/search",
