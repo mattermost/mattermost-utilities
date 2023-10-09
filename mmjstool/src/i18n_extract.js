@@ -51,6 +51,25 @@ export function extractFromDirectory(dirPaths, filters = []) {
     });
 }
 
+function getIdAndMessageFromMessageDescriptor(messageDescriptor) {
+    let id = '';
+    let defaultMessage = '';
+    for (const property of messageDescriptor.properties) {
+        if (property && property.type && property.type === 'Property' &&
+                (property.key.name === 'id' || property.key.name === 'defaultMessage') &&
+                property.key && property.key.type && property.key.type === 'Identifier' &&
+                property.value && property.value.type && property.value.type === 'Literal' &&
+                property.value.value !== '') {
+            if (property.key.name === 'id') {
+                id = property.value.value;
+            } else if (property.key.name === 'defaultMessage') {
+                defaultMessage = property.value.value;
+            }
+        }
+    }
+    return {id, defaultMessage};
+}
+
 function extractFromFile(path) {
     const translations = {};
 
@@ -73,18 +92,7 @@ function extractFromFile(path) {
             } else if ((node.callee.type === 'MemberExpression' && node.callee.property.name === 'formatMessage') ||
                 node.callee.name === 'formatMessage') {
                 if (node.arguments && node.arguments[0] && node.arguments[0].properties) {
-                    let id = '';
-                    let defaultMessage = '';
-
-                    for (const prop of node.arguments[0].properties) {
-                        // let prop = node.arguments[0].properties[idx]
-                        if (prop.value && prop.key && prop.key.name === 'id') {
-                            id = prop.value.value;
-                        }
-                        if (prop.value && prop.key && prop.key.name === 'defaultMessage') {
-                            defaultMessage = prop.value.value;
-                        }
-                    }
+                    const {id, defaultMessage} = getIdAndMessageFromMessageDescriptor(node.arguments[0]);
                     if (id && id !== '') {
                         translations[id] = defaultMessage;
                     }
@@ -102,27 +110,20 @@ function extractFromFile(path) {
                     if (nodeProperty.type && nodeProperty.type === 'Property' && nodeProperty.key && nodeProperty.key.name !== '' &&
                             nodeProperty.value && nodeProperty.value.type === 'ObjectExpression' &&
                             nodeProperty.value.properties && nodeProperty.value.properties.length !== 0) {
-                        let id = '';
-                        let defaultMessage = '';
-
-                        for (const property of nodeProperty.value.properties) {
-                            if (property && property.type && property.type === 'Property' &&
-                                    (property.key.name === 'id' || property.key.name === 'defaultMessage') &&
-                                    property.key && property.key.type && property.key.type === 'Identifier' &&
-                                    property.value && property.value.type && property.value.type === 'Literal' &&
-                                    property.value.value !== '') {
-                                if (property.key.name === 'id') {
-                                    id = property.value.value;
-                                } else if (property.key.name === 'defaultMessage') {
-                                    defaultMessage = property.value.value;
-                                }
-                            }
-                        }
-
+                        const {id, defaultMessage} = getIdAndMessageFromMessageDescriptor(nodeProperty.value);
                         if (id !== '' && defaultMessage !== '') {
                             translations[id] = defaultMessage;
                         }
                     }
+                }
+            } else if ((node.callee.type === 'MemberExpression' && node.callee.property.name === 'defineMessage') ||
+            node.callee.name === 'defineMessage') {
+                if (!node?.arguments?.[0]?.properties) {
+                    return;
+                }
+                const {id, defaultMessage} = getIdAndMessageFromMessageDescriptor(node.arguments[0]);
+                if (id !== '' && defaultMessage !== '') {
+                    translations[id] = defaultMessage;
                 }
             }
         },
