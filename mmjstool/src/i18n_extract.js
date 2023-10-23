@@ -11,7 +11,6 @@ const translatableComponents = {
     FormattedMessage: [{id: 'id', default: 'defaultMessage'}],
     FormattedHTMLMessage: [{id: 'id', default: 'defaultMessage'}],
     FormattedMarkdownMessage: [{id: 'id', default: 'defaultMessage'}],
-    LocalizedInput: ['placeholder'],
     LocalizedIcon: ['title'],
 
     // Used in mattermost-mobile exclusively
@@ -77,7 +76,6 @@ function extractFromFile(path) {
                     let defaultMessage = '';
 
                     for (const prop of node.arguments[0].properties) {
-                        // let prop = node.arguments[0].properties[idx]
                         if (prop.value && prop.key && prop.key.name === 'id') {
                             id = prop.value.value;
                         }
