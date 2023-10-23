@@ -11,7 +11,6 @@ const translatableComponents = {
     FormattedMessage: [{id: 'id', default: 'defaultMessage'}],
     FormattedHTMLMessage: [{id: 'id', default: 'defaultMessage'}],
     FormattedMarkdownMessage: [{id: 'id', default: 'defaultMessage'}],
-    LocalizedInput: ['placeholder'],
     LocalizedIcon: ['title'],
 
     // Used in mattermost-mobile exclusively
