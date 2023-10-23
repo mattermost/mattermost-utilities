@@ -9,7 +9,6 @@ import * as FileHound from 'filehound';
 
 const translatableComponents = {
     FormattedMessage: [{id: 'id', default: 'defaultMessage'}],
-    FormattedHTMLMessage: [{id: 'id', default: 'defaultMessage'}],
     FormattedMarkdownMessage: [{id: 'id', default: 'defaultMessage'}],
     LocalizedIcon: ['title'],
 
