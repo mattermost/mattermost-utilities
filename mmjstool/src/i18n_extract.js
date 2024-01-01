@@ -10,7 +10,6 @@ import * as FileHound from 'filehound';
 const translatableComponents = {
     FormattedMessage: [{id: 'id', default: 'defaultMessage'}],
     FormattedMarkdownMessage: [{id: 'id', default: 'defaultMessage'}],
-    LocalizedIcon: ['title'],
 
     // Used in mattermost-mobile exclusively
     FormattedText: [{id: 'id', default: 'defaultMessage'}],
