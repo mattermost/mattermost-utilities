@@ -14,28 +14,24 @@ echo "Starting script"
 {
   # Read the header of the CSV file.
   read
-  while IFS="," read -r title owner repo description labels milestone
+  while IFS="," read -r title owner repo description_location labels milestone
   do
+    # Extract issue description from the description file location.
+    description=$(cat "$description_location")
+
+    # Extract a single label into multiple labels separated by |.
+    [[ "$labels" != "" ]] && labels=['"'$(echo "$labels" | sed 's/|/","/g')'"'] || labels=[]
+
+    # Extract the milestone value.
+    [[ "$milestone" != "" ]] && milestone=$milestone || milestone=null
+
     # Create API request body.
-    body='{"title":"'"$title"'","body":"'"$description"'"'
-
-    # Add label in the request body, if present.
-    if [ "$labels" != "" ] 
-    then
-      # Extract a single label into multiple labels separated by /.
-      labels=$(echo "$labels" | sed 's/\//","/g') 
-      body=$body',"labels":["'"$labels"'"]'
-    fi
-
-    # Add milestone in the request body, if present.
-    if [ "$milestone" != "" ] 
-    then
-      # Extract a single label into multiple labels separated by /.
-      body=$body',"milestone":'$milestone''
-    fi
-
-    # Close the request body.
-    body=$body"}"
+    body=$( jq -n \
+               --arg title "$title" \
+               --arg body "$description" \
+               --argjson labels "$labels" \
+               --argjson milestone "$milestone" \
+               '{title: $title, body: $body, labels: $labels, milestone: $milestone}' )
 
     # Make an API request to create GitHub issues.
     response=$(curl -L \
