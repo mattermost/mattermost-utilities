@@ -17,6 +17,11 @@ GitHub issue tools provides a bash script to help automatically create GitHub is
     - Configure the `.env` file created before. Enter your `github personal access token` in the `token` field and `issue.csv` file location in the `csv_file` field.
 
 ## How to use
+- Install `jq` tool using the command:
+```
+sudo apt-get install jq
+```
+
 - Run the script to create GitHub issues in the repository:
 ```
 ./create_github_issue.sh
