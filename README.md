@@ -4,6 +4,7 @@ Mattermost is an open source, self-hosted Slack-alternative https://mattermost.o
 
 Currently this repo contains these utilities:
 
+* **github_issue_tools**: is a tool to help create Github issues from csv file.
 * **github_jira_tools**: is a CLI to help create Github issues from Mattermost Jira and a Docker container that runs in a cron-like fashion and keeps the help wanted tickets up to date.
 * **github_jira**: is written in Go and is the successor to `github_jira_tools`.
 * **mmgotool**: is a CLI to help with some task related to the mattermost-server development.
