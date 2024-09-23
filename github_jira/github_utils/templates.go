@@ -1,4 +1,4 @@
-package github
+package github_utils
 
 const templateContributing = `
 ----

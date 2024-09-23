@@ -52,38 +52,32 @@ func search(basicAuth string, debug bool, jql string, maxResults int, fields []s
 		return nil, errors.Wrap(err, "searching jira")
 	}
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/rest/api/2/search", mattermostAtlassianUrl), bytes.NewReader(bodyReader))
-
 	if err != nil {
 		return nil, errors.Wrap(err, "searching jira")
 	}
 	req.Header.Set("Authorization", basicAuth)
-
+	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "searching jira")
 	}
-
 	defer resp.Body.Close()
-	respBytes, err := io.ReadAll(resp.Body)
-
 	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("searching jira, status code %d with text %s", resp.StatusCode, string(respBytes))
+		return nil, fmt.Errorf("searching jira, status code %d with text %s", resp.StatusCode, string(""))
 	}
 
+	var apiResp map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
 	if err != nil {
-		return nil, errors.Wrap(err, "parsing jira search results")
+		return nil, errors.Wrap(err, "error decoding api response")
 	}
 
 	if debug {
-		fmt.Println(string(respBytes))
+		fmt.Println(apiResp)
 	}
 
-	var issues []Issue
-	err = json.Unmarshal(respBytes, &issues)
-	if err != nil {
-		return nil, errors.Wrap(err, "parsing jira search results")
-	}
-
+	// parse api response and extract required fields
+	issues, _ := parseApiResponse(apiResp)
 	return issues, nil
 }
 
@@ -111,6 +105,7 @@ func LinkToGithub(ghUrl, jiraKey, basicAuth string) error {
 	}
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/rest/api/3/issue/%s", mattermostAtlassianUrl, jiraKey), bytes.NewReader(jiraFieldsReader))
 	req.Header.Set("Authorization", basicAuth)
+	req.Header.Set("Content-Type", "application/json")
 
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("creating request for jira issue %s.", jiraKey))
@@ -130,4 +125,43 @@ func LinkToGithub(ghUrl, jiraKey, basicAuth string) error {
 	}
 
 	return nil
+}
+
+func parseApiResponse(response map[string]interface{}) ([]Issue, error) {
+	issues, ok := response["issues"]
+	if !ok {
+		return nil, errors.New("Not found")
+	}
+	fields, ok := issues.([]interface{})
+	var is []Issue
+	var descr, summary string
+	for i := range fields {
+		issue, ok := fields[i].(map[string]interface{})
+		if !ok {
+			return nil, errors.New("Not found")
+		}
+		issueFields := issue["fields"]
+		desc, ok := issueFields.(map[string]interface{})
+		if !ok {
+			descr = "No description provided in jira issue"
+			summary = "No summary provided in jira issue"
+		} else {
+			descr = desc["description"].(string)
+			summary = desc["summary"].(string)
+		}
+
+		isf := IssueFields{
+			Summary:     summary,
+			Description: descr,
+		}
+		is1 := Issue{
+			Key:    issue["id"].(string),
+			Fields: isf,
+		}
+		is = append(is, is1)
+	}
+	if !ok {
+		return nil, errors.New("Not found")
+	}
+	return is, nil
 }
