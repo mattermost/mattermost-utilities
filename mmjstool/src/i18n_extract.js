@@ -79,12 +79,14 @@ function extractFromFile(path) {
     walk(ast, {
         CallExpression: (node) => {
             if ((node.callee.type === 'MemberExpression' && node.callee.property.name === 'localizeMessage') ||
-                node.callee.name === 'localizeMessage') {
-                const id = node.arguments[0] && node.arguments[0].value;
-                const defaultMessage = node.arguments[1] && node.arguments[1].value;
-
-                if (id && id !== '') {
-                    translations[id] = defaultMessage;
+                node.callee.name === 'localizeMessage' ||
+                (node.callee.type === 'MemberExpression' && node.callee.property.name === 'localizeAndFormatMessage') ||
+                node.callee.name === 'localizeAndFormatMessage') {
+                if (node.arguments && node.arguments[0] && node.arguments[0].properties) {
+                    const {id, defaultMessage} = getIdAndMessageFromMessageDescriptor(node.arguments[0]);
+                    if (id && id !== '') {
+                        translations[id] = defaultMessage;
+                    }
                 }
             } else if ((node.callee.type === 'MemberExpression' && node.callee.property.name === 'formatMessage') ||
                 node.callee.name === 'formatMessage') {
