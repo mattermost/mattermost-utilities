@@ -187,7 +187,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "i18nCheckMobile": () => (/* binding */ i18nCheckMobile),
 /* harmony export */   "i18nCleanEmpty": () => (/* binding */ i18nCleanEmpty),
 /* harmony export */   "i18nCleanEmptyMobile": () => (/* binding */ i18nCleanEmptyMobile),
-/* harmony export */   "i18nCombine": () => (/* binding */ i18nCombine),
 /* harmony export */   "i18nExtractDesktop": () => (/* binding */ i18nExtractDesktop),
 /* harmony export */   "i18nExtractMobile": () => (/* binding */ i18nExtractMobile),
 /* harmony export */   "i18nExtractWebapp": () => (/* binding */ i18nExtractWebapp),
@@ -322,27 +321,6 @@ function i18nExtractMobile(argv) {
         const sortedMobileTranslations = sortJson(currentTranslations, options);
         fs.writeFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', 'en.json'), JSON.stringify(sortedMobileTranslations, null, 2) + '\n');
     });
-}
-
-function i18nCombine(argv) {
-    const outputFile = argv.output;
-
-    const translations = {};
-
-    for (const file of argv._.slice(2)) {
-        const itemTranslationsJson = fs.readFileSync(file);
-        const itemTranslations = JSON.parse(itemTranslationsJson);
-
-        for (const key in itemTranslations) {
-            if ({}.hasOwnProperty.call(itemTranslations, key)) {
-                translations[key] = itemTranslations[key];
-            }
-        }
-    }
-
-    const options = {ignoreCase: true, reverse: false, depth: 1};
-    const sortedTranslations = sortJson(translations, options);
-    fs.writeFileSync(outputFile, JSON.stringify(sortedTranslations, null, 2) + '\n');
 }
 
 function i18nSort(argv) {
@@ -505,17 +483,6 @@ const ignored = yargs.
                 'Read the source code, find all the translations string from mattermost-mobile and write them to the file mattermost-mobile/assets/base/i18n/en.json.',
                 () => { /* empty function */ },
                 i18nHandlers.i18nExtractMobile,
-            ).
-            command('combine',
-                'Read the translations string from mattermost-webapp and mattermost-mobile and combine them in a single file',
-                (combineArgs) => {
-                    combineArgs.demandCommand(2).
-                        option('output', {
-                            describe: 'File to store the combined translations',
-                            default: 'en.json',
-                        });
-                },
-                i18nHandlers.i18nCombine,
             ).
             command('split',
                 'Read a set of combined translation files, and split them in mattermost-server and mattermost-web translations',

@@ -127,27 +127,6 @@ export function i18nExtractMobile(argv) {
     });
 }
 
-export function i18nCombine(argv) {
-    const outputFile = argv.output;
-
-    const translations = {};
-
-    for (const file of argv._.slice(2)) {
-        const itemTranslationsJson = fs.readFileSync(file);
-        const itemTranslations = JSON.parse(itemTranslationsJson);
-
-        for (const key in itemTranslations) {
-            if ({}.hasOwnProperty.call(itemTranslations, key)) {
-                translations[key] = itemTranslations[key];
-            }
-        }
-    }
-
-    const options = {ignoreCase: true, reverse: false, depth: 1};
-    const sortedTranslations = sortJson(translations, options);
-    fs.writeFileSync(outputFile, JSON.stringify(sortedTranslations, null, 2) + '\n');
-}
-
 export function i18nSort(argv) {
     const outputFile = argv.output;
 
