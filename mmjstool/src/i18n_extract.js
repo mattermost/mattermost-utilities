@@ -7,11 +7,10 @@ import {parse} from '@typescript-eslint/typescript-estree';
 import walk from 'estree-walk';
 import * as FileHound from 'filehound';
 
+// FormattedMessage is used in desktop and in a handful of mattermost-mobile
+// files; the others are mattermost-mobile only.
 const translatableComponents = {
     FormattedMessage: [{id: 'id', default: 'defaultMessage'}],
-    FormattedMarkdownMessage: [{id: 'id', default: 'defaultMessage'}],
-
-    // Used in mattermost-mobile exclusively
     FormattedText: [{id: 'id', default: 'defaultMessage'}],
     FormattedMarkdownText: [{id: 'id', default: 'defaultMessage'}],
 };
@@ -132,31 +131,18 @@ function extractFromFile(path) {
                 let id = '';
                 let defaultMessage = '';
 
-                if (typeof translatableProp === 'string') {
-                    for (const attribute of node.attributes) {
-                        if (attribute.value && attribute.value.expression && attribute.value.expression.value && attribute.name && attribute.name.name === translatableProp) {
-                            id = attribute.value.expression.value.id;
-                            defaultMessage = attribute.value.expression.value.defaultMessage;
-                        }
-                        if (attribute.value && attribute.value.value && attribute.name && attribute.name.name === translatableProp) {
-                            id = attribute.value.value.id;
-                            defaultMessage = attribute.value.value.defaultMessage;
-                        }
+                for (const attribute of node.attributes) {
+                    if (attribute.value && attribute.value.expression && attribute.name && attribute.name.name === translatableProp.id) {
+                        id = attribute.value.expression.value;
                     }
-                } else {
-                    for (const attribute of node.attributes) {
-                        if (attribute.value && attribute.value.expression && attribute.name && attribute.name.name === translatableProp.id) {
-                            id = attribute.value.expression.value;
-                        }
-                        if (attribute.value && attribute.value.value && attribute.name && attribute.name.name === translatableProp.id) {
-                            id = attribute.value.value;
-                        }
-                        if (attribute.value && attribute.value.expression && attribute.name && attribute.name.name === translatableProp.default) {
-                            defaultMessage = attribute.value.expression.value;
-                        }
-                        if (attribute.value && attribute.value.value && attribute.name && attribute.name.name === translatableProp.default) {
-                            defaultMessage = attribute.value.value;
-                        }
+                    if (attribute.value && attribute.value.value && attribute.name && attribute.name.name === translatableProp.id) {
+                        id = attribute.value.value;
+                    }
+                    if (attribute.value && attribute.value.expression && attribute.name && attribute.name.name === translatableProp.default) {
+                        defaultMessage = attribute.value.expression.value;
+                    }
+                    if (attribute.value && attribute.value.value && attribute.name && attribute.name.name === translatableProp.default) {
+                        defaultMessage = attribute.value.value;
                     }
                 }
                 if (id) {
