@@ -78,9 +78,7 @@ function extractFromFile(path) {
     walk(ast, {
         CallExpression: (node) => {
             if ((node.callee.type === 'MemberExpression' && node.callee.property.name === 'localizeMessage') ||
-                node.callee.name === 'localizeMessage' ||
-                (node.callee.type === 'MemberExpression' && node.callee.property.name === 'localizeAndFormatMessage') ||
-                node.callee.name === 'localizeAndFormatMessage') {
+                node.callee.name === 'localizeMessage') {
                 if (node.arguments && node.arguments[0] && node.arguments[0].properties) {
                     const {id, defaultMessage} = getIdAndMessageFromMessageDescriptor(node.arguments[0]);
                     if (id && id !== '') {
