@@ -29,17 +29,6 @@ const ignored = yargs.
                 () => { /* empty function */ },
                 i18nHandlers.i18nExtractMobile,
             ).
-            command('combine',
-                'Read the translations string from mattermost-webapp and mattermost-mobile and combine them in a single file',
-                (combineArgs) => {
-                    combineArgs.demandCommand(2).
-                        option('output', {
-                            describe: 'File to store the combined translations',
-                            default: 'en.json',
-                        });
-                },
-                i18nHandlers.i18nCombine,
-            ).
             command('split',
                 'Read a set of combined translation files, and split them in mattermost-server and mattermost-web translations',
                 (splitArgs) => {
