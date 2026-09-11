@@ -127,53 +127,6 @@ export function i18nExtractMobile(argv) {
     });
 }
 
-export function i18nSort(argv) {
-    const outputFile = argv.output;
-
-    const file = argv._[2];
-    const itemTranslationsJson = fs.readFileSync(file);
-    const itemTranslations = JSON.parse(itemTranslationsJson);
-
-    const options = {ignoreCase: true, reverse: false, depth: 1};
-    const sortedTranslations = sortJson(itemTranslations, options);
-    fs.writeFileSync(outputFile, JSON.stringify(sortedTranslations, null, 2) + '\n');
-}
-
-export function i18nSplit(argv) {
-    const webappDir = argv['webapp-dir'];
-    const mobileDir = argv['mobile-dir'];
-    const inputFiles = argv.inputs.split(',');
-
-    const promise1 = i18nExtractLib.extractFromDirectory([argv['webapp-dir']], ['dist', 'node_modules', 'non_npm_dependencies', 'tests', 'components/gif_picker/static/gif.worker.js']);
-    const promise2 = i18nExtractLib.extractFromDirectory([argv['mobile-dir'] + '/app', argv['mobile-dir'] + '/share_extension'], []);
-    Promise.all([promise1, promise2]).then(([translationsWebapp, translationsMobile]) => {
-        for (const inputFile of inputFiles) {
-            const filename = path.basename(inputFile.trim());
-            const allTranslationsJson = fs.readFileSync(inputFile.trim());
-            const allTranslations = JSON.parse(allTranslationsJson);
-
-            const webappKeys = new Set(Object.keys(translationsWebapp));
-            const mobileKeys = new Set(Object.keys(translationsMobile));
-
-            const translationsWebappOutput = {};
-            for (const key of webappKeys) {
-                translationsWebappOutput[key] = allTranslations[key];
-            }
-
-            const translationsMobileOutput = {};
-            for (const key of mobileKeys) {
-                translationsMobileOutput[key] = allTranslations[key];
-            }
-
-            const options = {ignoreCase: true, reverse: false, depth: 1};
-            const sortedWebappTranslations = sortJson(translationsWebappOutput, options);
-            const sortedMobileTranslations = sortJson(translationsMobileOutput, options);
-            fs.writeFileSync(path.join(webappDir, 'i18n', filename), JSON.stringify(sortedWebappTranslations, null, 2) + '\n');
-            fs.writeFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', filename), JSON.stringify(sortedMobileTranslations, null, 2) + '\n');
-        }
-    });
-}
-
 export function i18nCheckEmptySrcMobile(argv) {
     const mobileDir = argv['mobile-dir'];
     const fPath = path.join(mobileDir, 'assets', 'base', 'i18n');

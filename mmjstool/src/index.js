@@ -29,28 +29,6 @@ const ignored = yargs.
                 () => { /* empty function */ },
                 i18nHandlers.i18nExtractMobile,
             ).
-            command('split',
-                'Read a set of combined translation files, and split them in mattermost-server and mattermost-web translations',
-                (splitArgs) => {
-                    splitArgs.
-                        option('inputs', {
-                            describe: 'List of file to read the combined translations, splitted by ",". (e.g. en.json,es.json,fr.json)',
-                            default: 'en.json',
-                        });
-                },
-                i18nHandlers.i18nSplit,
-            ).
-            command('sort',
-                'read a file and sort the content',
-                (sortArgs) => {
-                    sortArgs.demandCommand(1).
-                        option('output', {
-                            describe: 'File to store sorted translations',
-                            default: 'en.json',
-                        });
-                },
-                i18nHandlers.i18nSort,
-            ).
             command('check-mobile',
                 'Read the source code, find all the translations string, and show you the differences with the current i18n/en.json files',
                 () => { /* empty function */ },
