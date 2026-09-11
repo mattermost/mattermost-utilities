@@ -98,9 +98,7 @@ function extractFromFile(path) {
     estree_walk__WEBPACK_IMPORTED_MODULE_2___default()(ast, {
         CallExpression: (node) => {
             if ((node.callee.type === 'MemberExpression' && node.callee.property.name === 'localizeMessage') ||
-                node.callee.name === 'localizeMessage' ||
-                (node.callee.type === 'MemberExpression' && node.callee.property.name === 'localizeAndFormatMessage') ||
-                node.callee.name === 'localizeAndFormatMessage') {
+                node.callee.name === 'localizeMessage') {
                 if (node.arguments && node.arguments[0] && node.arguments[0].properties) {
                     const {id, defaultMessage} = getIdAndMessageFromMessageDescriptor(node.arguments[0]);
                     if (id && id !== '') {
@@ -190,8 +188,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "i18nExtractDesktop": () => (/* binding */ i18nExtractDesktop),
 /* harmony export */   "i18nExtractMobile": () => (/* binding */ i18nExtractMobile),
 /* harmony export */   "i18nExtractWebapp": () => (/* binding */ i18nExtractWebapp),
-/* harmony export */   "i18nSort": () => (/* binding */ i18nSort),
-/* harmony export */   "i18nSplit": () => (/* binding */ i18nSplit),
 /* harmony export */   "removeItems": () => (/* binding */ removeItems)
 /* harmony export */ });
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
@@ -323,53 +319,6 @@ function i18nExtractMobile(argv) {
     });
 }
 
-function i18nSort(argv) {
-    const outputFile = argv.output;
-
-    const file = argv._[2];
-    const itemTranslationsJson = fs.readFileSync(file);
-    const itemTranslations = JSON.parse(itemTranslationsJson);
-
-    const options = {ignoreCase: true, reverse: false, depth: 1};
-    const sortedTranslations = sortJson(itemTranslations, options);
-    fs.writeFileSync(outputFile, JSON.stringify(sortedTranslations, null, 2) + '\n');
-}
-
-function i18nSplit(argv) {
-    const webappDir = argv['webapp-dir'];
-    const mobileDir = argv['mobile-dir'];
-    const inputFiles = argv.inputs.split(',');
-
-    const promise1 = i18nExtractLib.extractFromDirectory([argv['webapp-dir']], ['dist', 'node_modules', 'non_npm_dependencies', 'tests', 'components/gif_picker/static/gif.worker.js']);
-    const promise2 = i18nExtractLib.extractFromDirectory([argv['mobile-dir'] + '/app', argv['mobile-dir'] + '/share_extension'], []);
-    Promise.all([promise1, promise2]).then(([translationsWebapp, translationsMobile]) => {
-        for (const inputFile of inputFiles) {
-            const filename = path.basename(inputFile.trim());
-            const allTranslationsJson = fs.readFileSync(inputFile.trim());
-            const allTranslations = JSON.parse(allTranslationsJson);
-
-            const webappKeys = new Set(Object.keys(translationsWebapp));
-            const mobileKeys = new Set(Object.keys(translationsMobile));
-
-            const translationsWebappOutput = {};
-            for (const key of webappKeys) {
-                translationsWebappOutput[key] = allTranslations[key];
-            }
-
-            const translationsMobileOutput = {};
-            for (const key of mobileKeys) {
-                translationsMobileOutput[key] = allTranslations[key];
-            }
-
-            const options = {ignoreCase: true, reverse: false, depth: 1};
-            const sortedWebappTranslations = sortJson(translationsWebappOutput, options);
-            const sortedMobileTranslations = sortJson(translationsMobileOutput, options);
-            fs.writeFileSync(path.join(webappDir, 'i18n', filename), JSON.stringify(sortedWebappTranslations, null, 2) + '\n');
-            fs.writeFileSync(path.join(mobileDir, 'assets', 'base', 'i18n', filename), JSON.stringify(sortedMobileTranslations, null, 2) + '\n');
-        }
-    });
-}
-
 function i18nCheckEmptySrcMobile(argv) {
     const mobileDir = argv['mobile-dir'];
     const fPath = path.join(mobileDir, 'assets', 'base', 'i18n');
@@ -483,28 +432,6 @@ const ignored = yargs.
                 'Read the source code, find all the translations string from mattermost-mobile and write them to the file mattermost-mobile/assets/base/i18n/en.json.',
                 () => { /* empty function */ },
                 i18nHandlers.i18nExtractMobile,
-            ).
-            command('split',
-                'Read a set of combined translation files, and split them in mattermost-server and mattermost-web translations',
-                (splitArgs) => {
-                    splitArgs.
-                        option('inputs', {
-                            describe: 'List of file to read the combined translations, splitted by ",". (e.g. en.json,es.json,fr.json)',
-                            default: 'en.json',
-                        });
-                },
-                i18nHandlers.i18nSplit,
-            ).
-            command('sort',
-                'read a file and sort the content',
-                (sortArgs) => {
-                    sortArgs.demandCommand(1).
-                        option('output', {
-                            describe: 'File to store sorted translations',
-                            default: 'en.json',
-                        });
-                },
-                i18nHandlers.i18nSort,
             ).
             command('check-mobile',
                 'Read the source code, find all the translations string, and show you the differences with the current i18n/en.json files',
