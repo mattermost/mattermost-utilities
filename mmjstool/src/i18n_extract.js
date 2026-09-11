@@ -7,8 +7,8 @@ import {parse} from '@typescript-eslint/typescript-estree';
 import walk from 'estree-walk';
 import * as FileHound from 'filehound';
 
-// FormattedMessage is used in desktop and in a handful of mattermost-mobile
-// files; the others are mattermost-mobile only.
+// FormattedMessage is used by plugin webapps, desktop and a handful of
+// mattermost-mobile files; the others are mattermost-mobile only.
 const translatableComponents = {
     FormattedMessage: [{id: 'id', default: 'defaultMessage'}],
     FormattedText: [{id: 'id', default: 'defaultMessage'}],

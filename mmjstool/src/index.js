@@ -7,13 +7,18 @@ const i18nHandlers = require('./i18n_handlers');
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "[iI]gnored" }]*/
 const ignored = yargs.
     usage('Usage: mmjstool <command> [options]').
-    example('mmjstool i18n extract-mobile --mobile-dir ./', 'Extract all the i18n strings from the mobile source code').
+    example('mmjstool i18n extract-webapp --webapp-dir ./', 'Extract all the i18n strings from the webapp source code').
     demandCommand(1).
     help('h').
     alias('h', 'help').
     command('i18n', 'I18n management commands', (i18nArgs) => {
         i18nArgs.
             demandCommand(1).
+            command('extract-webapp',
+                'Read the source code, find all the translations string from a webapp (used by plugin webapps via "make i18n-extract") and write them to the file <webapp-dir>/i18n/en.json',
+                () => { /* empty function */ },
+                i18nHandlers.i18nExtractWebapp,
+            ).
             command('extract-desktop',
                 'Read the source code, find all the translations string from desktop and write them to the file desktop/i18n/en.json',
                 () => { /* empty function */ },

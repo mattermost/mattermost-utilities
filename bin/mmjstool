@@ -27,8 +27,8 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-// FormattedMessage is used in desktop and in a handful of mattermost-mobile
-// files; the others are mattermost-mobile only.
+// FormattedMessage is used by plugin webapps, desktop and a handful of
+// mattermost-mobile files; the others are mattermost-mobile only.
 const translatableComponents = {
     FormattedMessage: [{id: 'id', default: 'defaultMessage'}],
     FormattedText: [{id: 'id', default: 'defaultMessage'}],
@@ -190,6 +190,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "i18nCombine": () => (/* binding */ i18nCombine),
 /* harmony export */   "i18nExtractDesktop": () => (/* binding */ i18nExtractDesktop),
 /* harmony export */   "i18nExtractMobile": () => (/* binding */ i18nExtractMobile),
+/* harmony export */   "i18nExtractWebapp": () => (/* binding */ i18nExtractWebapp),
 /* harmony export */   "i18nSort": () => (/* binding */ i18nSort),
 /* harmony export */   "i18nSplit": () => (/* binding */ i18nSplit),
 /* harmony export */   "removeItems": () => (/* binding */ removeItems)
@@ -212,6 +213,11 @@ function difference(setA, setB) {
         differenceSet.delete(elem);
     }
     return differenceSet;
+}
+
+function getCurrentTranslationsWebapp(webappDir) {
+    const currentWebappTranslationsJson = fs.readFileSync(path.join(webappDir, 'i18n', 'en.json'));
+    return JSON.parse(currentWebappTranslationsJson);
 }
 
 function getCurrentTranslationsDesktop(desktopDir) {
@@ -249,6 +255,28 @@ function i18nCheckMobile(argv) {
             console.log('Changes found');
             process.exit(1);
         }
+    });
+}
+
+function i18nExtractWebapp(argv) {
+    const webappDir = argv['webapp-dir'];
+
+    const currentTranslations = getCurrentTranslationsWebapp(webappDir);
+    const currentWebappKeys = new Set(Object.keys(currentTranslations));
+
+    i18nExtractLib.extractFromDirectory([argv['webapp-dir']], ['storybook-static', 'dist', 'node_modules', 'non_npm_dependencies', 'tests', 'components/gif_picker/static/gif.worker.js']).then((translationsWebapp) => {
+        const webappKeys = new Set(Object.keys(translationsWebapp));
+
+        for (const key of difference(currentWebappKeys, webappKeys)) {
+            delete currentTranslations[key];
+        }
+        for (const key of difference(webappKeys, currentWebappKeys)) {
+            currentTranslations[key] = translationsWebapp[key];
+        }
+
+        const options = {ignoreCase: true, reverse: false, depth: 1};
+        const sortedWebappTranslations = sortJson(currentTranslations, options);
+        fs.writeFileSync(path.join(webappDir, 'i18n', 'en.json'), JSON.stringify(sortedWebappTranslations, null, 2) + '\n');
     });
 }
 
@@ -456,13 +484,18 @@ const i18nHandlers = __webpack_require__(4114);
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "[iI]gnored" }]*/
 const ignored = yargs.
     usage('Usage: mmjstool <command> [options]').
-    example('mmjstool i18n extract-mobile --mobile-dir ./', 'Extract all the i18n strings from the mobile source code').
+    example('mmjstool i18n extract-webapp --webapp-dir ./', 'Extract all the i18n strings from the webapp source code').
     demandCommand(1).
     help('h').
     alias('h', 'help').
     command('i18n', 'I18n management commands', (i18nArgs) => {
         i18nArgs.
             demandCommand(1).
+            command('extract-webapp',
+                'Read the source code, find all the translations string from a webapp (used by plugin webapps via "make i18n-extract") and write them to the file <webapp-dir>/i18n/en.json',
+                () => { /* empty function */ },
+                i18nHandlers.i18nExtractWebapp,
+            ).
             command('extract-desktop',
                 'Read the source code, find all the translations string from desktop and write them to the file desktop/i18n/en.json',
                 () => { /* empty function */ },

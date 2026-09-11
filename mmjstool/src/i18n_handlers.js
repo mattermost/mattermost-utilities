@@ -18,6 +18,11 @@ function difference(setA, setB) {
     return differenceSet;
 }
 
+function getCurrentTranslationsWebapp(webappDir) {
+    const currentWebappTranslationsJson = fs.readFileSync(path.join(webappDir, 'i18n', 'en.json'));
+    return JSON.parse(currentWebappTranslationsJson);
+}
+
 function getCurrentTranslationsDesktop(desktopDir) {
     const currentDesktopTranslationsJson = fs.readFileSync(path.join(desktopDir, 'i18n', 'en.json'));
     return JSON.parse(currentDesktopTranslationsJson);
@@ -53,6 +58,28 @@ export function i18nCheckMobile(argv) {
             console.log('Changes found');
             process.exit(1);
         }
+    });
+}
+
+export function i18nExtractWebapp(argv) {
+    const webappDir = argv['webapp-dir'];
+
+    const currentTranslations = getCurrentTranslationsWebapp(webappDir);
+    const currentWebappKeys = new Set(Object.keys(currentTranslations));
+
+    i18nExtractLib.extractFromDirectory([argv['webapp-dir']], ['storybook-static', 'dist', 'node_modules', 'non_npm_dependencies', 'tests', 'components/gif_picker/static/gif.worker.js']).then((translationsWebapp) => {
+        const webappKeys = new Set(Object.keys(translationsWebapp));
+
+        for (const key of difference(currentWebappKeys, webappKeys)) {
+            delete currentTranslations[key];
+        }
+        for (const key of difference(webappKeys, currentWebappKeys)) {
+            currentTranslations[key] = translationsWebapp[key];
+        }
+
+        const options = {ignoreCase: true, reverse: false, depth: 1};
+        const sortedWebappTranslations = sortJson(currentTranslations, options);
+        fs.writeFileSync(path.join(webappDir, 'i18n', 'en.json'), JSON.stringify(sortedWebappTranslations, null, 2) + '\n');
     });
 }
 
