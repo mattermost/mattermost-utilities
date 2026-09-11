@@ -7,7 +7,7 @@ Currently this repo contains these utilities:
 * **github_jira_tools**: is a CLI to help create Github issues from Mattermost Jira and a Docker container that runs in a cron-like fashion and keeps the help wanted tickets up to date.
 * **github_jira**: is written in Go and is the successor to `github_jira_tools`.
 * **mmgotool**: is a CLI to help with some task related to the mattermost-server development.
-* **mmjstool**: is a CLI to help with some task related to the mattermost-webapp, mattermost-redux and mattermost-mobile development.
+* **mmjstool**: is a CLI to help with some task related to the mattermost-mobile and desktop development. The web app extracts its own translations with `formatjs extract` and does not use this tool.
 * **pluginops**: This tools allows syncing defined sets of labels across multiple repositories in a GitHub organization.
 
 You can build the `github_jira` container with `docker build -f github_jira/Dockerfile.sync_helpwanted_tickets ./github_jira -t sync-helpwanted-tickets:latest` .
