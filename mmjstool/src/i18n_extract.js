@@ -7,11 +7,10 @@ import {parse} from '@typescript-eslint/typescript-estree';
 import walk from 'estree-walk';
 import * as FileHound from 'filehound';
 
+// FormattedMessage is used by plugin webapps, desktop and a handful of
+// mattermost-mobile files; the others are mattermost-mobile only.
 const translatableComponents = {
     FormattedMessage: [{id: 'id', default: 'defaultMessage'}],
-    FormattedMarkdownMessage: [{id: 'id', default: 'defaultMessage'}],
-
-    // Used in mattermost-mobile exclusively
     FormattedText: [{id: 'id', default: 'defaultMessage'}],
     FormattedMarkdownText: [{id: 'id', default: 'defaultMessage'}],
 };
@@ -79,9 +78,7 @@ function extractFromFile(path) {
     walk(ast, {
         CallExpression: (node) => {
             if ((node.callee.type === 'MemberExpression' && node.callee.property.name === 'localizeMessage') ||
-                node.callee.name === 'localizeMessage' ||
-                (node.callee.type === 'MemberExpression' && node.callee.property.name === 'localizeAndFormatMessage') ||
-                node.callee.name === 'localizeAndFormatMessage') {
+                node.callee.name === 'localizeMessage') {
                 if (node.arguments && node.arguments[0] && node.arguments[0].properties) {
                     const {id, defaultMessage} = getIdAndMessageFromMessageDescriptor(node.arguments[0]);
                     if (id && id !== '') {
@@ -132,31 +129,18 @@ function extractFromFile(path) {
                 let id = '';
                 let defaultMessage = '';
 
-                if (typeof translatableProp === 'string') {
-                    for (const attribute of node.attributes) {
-                        if (attribute.value && attribute.value.expression && attribute.value.expression.value && attribute.name && attribute.name.name === translatableProp) {
-                            id = attribute.value.expression.value.id;
-                            defaultMessage = attribute.value.expression.value.defaultMessage;
-                        }
-                        if (attribute.value && attribute.value.value && attribute.name && attribute.name.name === translatableProp) {
-                            id = attribute.value.value.id;
-                            defaultMessage = attribute.value.value.defaultMessage;
-                        }
+                for (const attribute of node.attributes) {
+                    if (attribute.value && attribute.value.expression && attribute.name && attribute.name.name === translatableProp.id) {
+                        id = attribute.value.expression.value;
                     }
-                } else {
-                    for (const attribute of node.attributes) {
-                        if (attribute.value && attribute.value.expression && attribute.name && attribute.name.name === translatableProp.id) {
-                            id = attribute.value.expression.value;
-                        }
-                        if (attribute.value && attribute.value.value && attribute.name && attribute.name.name === translatableProp.id) {
-                            id = attribute.value.value;
-                        }
-                        if (attribute.value && attribute.value.expression && attribute.name && attribute.name.name === translatableProp.default) {
-                            defaultMessage = attribute.value.expression.value;
-                        }
-                        if (attribute.value && attribute.value.value && attribute.name && attribute.name.name === translatableProp.default) {
-                            defaultMessage = attribute.value.value;
-                        }
+                    if (attribute.value && attribute.value.value && attribute.name && attribute.name.name === translatableProp.id) {
+                        id = attribute.value.value;
+                    }
+                    if (attribute.value && attribute.value.expression && attribute.name && attribute.name.name === translatableProp.default) {
+                        defaultMessage = attribute.value.expression.value;
+                    }
+                    if (attribute.value && attribute.value.value && attribute.name && attribute.name.name === translatableProp.default) {
+                        defaultMessage = attribute.value.value;
                     }
                 }
                 if (id) {
